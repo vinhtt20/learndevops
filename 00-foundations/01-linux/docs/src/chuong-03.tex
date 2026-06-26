@@ -1,0 +1,1062 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+%% ---- Fonts (Latin Modern via .otf file names) ----
+\setmainfont{lmroman10-regular.otf}[
+  BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf,
+  BoldItalicFont=lmroman10-bolditalic.otf]
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmono10-italic.otf]
+
+%% ---- Languages ----
+\setdefaultlanguage{vietnamese}
+\setotherlanguage{english}
+
+%% ---- Hyperref ----
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black,
+  citecolor=blue!55!black,
+  pdftitle={Chuong 3 - Lam viec voi file},
+  pdfauthor={Linux Lab}
+}
+
+%% ---- Colors ----
+\definecolor{labgreen}{HTML}{1B7340}
+\definecolor{labgreenbg}{HTML}{E9F7EF}
+\definecolor{seniorblue}{HTML}{1F4E79}
+\definecolor{seniorbluebg}{HTML}{E8F0FA}
+\definecolor{checkpurple}{HTML}{6A1B9A}
+\definecolor{checkpurplebg}{HTML}{F3E9F8}
+\definecolor{noteorange}{HTML}{B35900}
+\definecolor{noteorangebg}{HTML}{FCF3E6}
+\definecolor{dangerred}{HTML}{B00020}
+\definecolor{dangerredbg}{HTML}{FBE7E9}
+\definecolor{coderulegray}{HTML}{888888}
+
+%% ---- tcolorbox styles ----
+\newtcolorbox{labbox}[1][]{
+  enhanced, breakable,
+  colback=labgreenbg, colframe=labgreen,
+  coltitle=white, fonttitle=\bfseries,
+  title={Thực hành ngay}, #1}
+
+\newtcolorbox{seniorbox}[1][]{
+  enhanced, breakable,
+  colback=seniorbluebg, colframe=seniorblue,
+  coltitle=white, fonttitle=\bfseries,
+  title={Góc Senior}, #1}
+
+\newtcolorbox{checkbox}[1][]{
+  enhanced, breakable,
+  colback=checkpurplebg, colframe=checkpurple,
+  coltitle=white, fonttitle=\bfseries,
+  title={Tự kiểm tra}, #1}
+
+\newtcolorbox{notebox}[1][]{
+  enhanced, breakable,
+  colback=noteorangebg, colframe=noteorange,
+  coltitle=white, fonttitle=\bfseries,
+  title={Ghi chú / Mẹo}, #1}
+
+\newtcolorbox{dangerbox}[1][]{
+  enhanced, breakable,
+  colback=dangerredbg, colframe=dangerred,
+  coltitle=white, fonttitle=\bfseries\large,
+  title={Cảnh báo / Nguy hiểm}, #1,
+  borderline={1.2pt}{0pt}{dangerred}}
+
+%% ---- Section formatting ----
+\titleformat{\section}
+  {\Large\bfseries\color{seniorblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{seniorblue!85!black}}{\thesubsection}{0.6em}{}
+
+%% ---- Header / Footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Chương 3 — Làm việc với file}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ---- Verbatim helper ----
+\usepackage{fancyvrb}
+\fvset{frame=single,framesep=4pt,rulecolor=\color{coderulegray},
+       fontsize=\small,xleftmargin=4pt}
+
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+\begin{document}
+
+%% ---- Title page ----
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{seniorblue} Chương 3\par}
+\vspace{1cm}
+{\LARGE\bfseries Làm việc với file\par}
+\vspace{0.5cm}
+{\large xem, tạo, sao chép, di chuyển, xóa (an toàn)\par}
+\vspace{2cm}
+{\large Giáo trình Linux cho người mới bắt đầu\par}
+\vfill
+{\large macOS \textbullet{} Terminal \textbullet{} Sân tập \cmd{\textasciitilde/linux-lab}\par}
+\vspace{1cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%% =========================================================
+\noindent
+Tôi sẽ sửa bản thảo theo toàn bộ góp ý của hội đồng, ưu tiên các vấn đề critical/major. Dưới đây là toàn bộ Chương 3 đã chỉnh sửa.
+
+\vspace{1em}
+
+\begin{quote}
+Ở Chương 2 bạn đã biết đi lại trong cây thư mục bằng \cmd{cd}, \cmd{pwd}, \cmd{ls}, hiểu đường dẫn, và đã có sẵn \textbf{sân tập} \cmd{\textasciitilde/linux-lab}. Chương này bạn sẽ học cách \textbf{chạm tay} vào chính các tệp tin: mở ra xem, tạo mới, nhân bản, dời chỗ, đổi tên và --- phần quan trọng nhất --- \textbf{xóa một cách an toàn}.
+
+\vspace{0.5em}
+Một câu nói trong nghề: \textit{``Lệnh \cmd{cd} sai thì bạn lạc đường; lệnh \cmd{rm} sai thì bạn mất dữ liệu.''} Chương này dạy bạn cách \textbf{không bao giờ mất dữ liệu vì gõ ẩu}.
+\end{quote}
+
+%% =========================================================
+\section*{Mục tiêu học tập}
+\addcontentsline{toc}{section}{Mục tiêu học tập}
+
+Học xong chương này, bạn sẽ tự tin:
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{Xem} nội dung file bằng 4 cách: \cmd{cat}, \cmd{less}, \cmd{head}, \cmd{tail} --- và biết khi nào dùng cái nào.
+\item \textbf{Tạo} file bằng \cmd{touch}, \cmd{echo > file}, \cmd{echo >> file} --- và phân biệt rạch ròi \cmd{>} (ghi đè) với \cmd{>>} (nối thêm).
+\item \textbf{Sao chép} file và thư mục bằng \cmd{cp}, \cmd{cp -R}, \cmd{cp -i}.
+\item \textbf{Di chuyển và đổi tên} bằng \cmd{mv}, \cmd{mv -i}.
+\item \textbf{Xóa an toàn} bằng \cmd{rm}, \cmd{rm -i}, \cmd{rm -r}, \cmd{rm -ri}, \cmd{rmdir} --- và hiểu vì sao \cmd{rm} trên Terminal \textbf{không} giống ``kéo vào Thùng rác''.
+\item Hiểu sơ về \textbf{ký tự đại diện} \cmd{*} và vì sao nó vừa tiện vừa nguy hiểm.
+\item Hình thành \textbf{bộ thói quen an toàn} mà cả Senior DevOps đều tuân theo (đặc biệt: \cmd{pwd} để biết mình \textbf{ở đâu}, \cmd{ls} để biết mình \textbf{sắp xóa gì}).
+\end{enumerate}
+
+\begin{notebox}[title={Ghi chú: Thuật ngữ sẽ gặp}]
+(giải thích ngay khi xuất hiện lần đầu trong bài): \textit{lệnh (command)}, \textit{tham số/đối số (argument)}, \textit{tùy chọn/cờ (option/flag)}, \textit{chuyển hướng (redirect)}, \textit{đệ quy (recursive)}, \textit{ký tự đại diện (wildcard/glob)}, \textit{idempotent (lặp-an-toàn)}. Đừng lo nếu giờ chưa hiểu --- ta sẽ định nghĩa từng cái đúng lúc.
+\end{notebox}
+
+%% =========================================================
+\section{Khởi động: vào sân tập (làm trước mọi thứ)}
+
+Nguyên tắc số 1 của chương này: \textbf{chỉ thực hành trong sân tập \cmd{\textasciitilde/linux-lab}, tuyệt đối không thực hành ở thư mục thật} (như Desktop, Documents, hay nơi chứa hình ảnh/giấy tờ của bạn).
+
+Mở \textbf{Terminal} (ứng dụng có sẵn trên máy Mac: nhấn \cmd{Cmd + Space}, gõ \cmd{Terminal}, nhấn \cmd{Enter}). Gõ:
+
+\begin{Verbatim}
+mkdir -p ~/linux-lab/ch3
+cd ~/linux-lab/ch3
+pwd
+\end{Verbatim}
+
+\textbf{Giải thích từng phần:}
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{mkdir} = \textit{make directory} (tạo thư mục). \cmd{-p} là một \textbf{tùy chọn} (option) nghĩa là ``tạo cả các thư mục cha nếu chưa có, và đừng báo lỗi nếu nó đã tồn tại''. Nhờ \cmd{-p} bạn chạy lại lệnh này nhiều lần cũng không sao.
+\item \cmd{\textasciitilde{}} là lối viết tắt của thư mục nhà (home) của bạn, ví dụ \cmd{/Users/ten-cua-ban}.
+\item \cmd{cd} = đi vào thư mục đó. \cmd{pwd} = in ra đường dẫn hiện tại để bạn chắc chắn mình đang đứng đúng chỗ.
+\end{itemize}
+
+\textbf{Kết quả mong đợi} (dòng cuối, \cmd{pwd} in ra):
+\begin{Verbatim}
+/Users/ten-cua-ban/linux-lab/ch3
+\end{Verbatim}
+
+\begin{notebox}[title={Ghi chú: Máy bạn có thể hiển thị khác}]
+chỗ \cmd{ten-cua-ban} sẽ là tên tài khoản trên máy bạn. Đó là điều bình thường, không phải lỗi. Miễn là đường dẫn kết thúc bằng \cmd{/linux-lab/ch3} là đúng.
+\end{notebox}
+
+\begin{notebox}[title={Mẹo: Vì sao gõ \texttt{pwd}?}]
+Đây đã là thói quen của người chuyên nghiệp: \textit{``Trước khi tạo/sửa/xóa, hãy chắc chắn mình đang ở đúng thư mục.''} \textbf{Nhầm thư mục là nguyên nhân số 1 của tai nạn xóa file} --- và \cmd{pwd} chính là công cụ cho bạn biết mình đang \textbf{đứng ở đâu}.
+\end{notebox}
+
+\begin{notebox}[title={Lưu ý nhỏ về máy đã cấu hình sẵn}]
+Trên một số máy đã được người dùng tinh chỉnh trước (qua ``dotfiles'', \cmd{oh-my-zsh}\ldots), các lệnh \cmd{rm}, \cmd{cp}, \cmd{mv} có thể \textbf{tự động hỏi xác nhận} do đã được đặt sẵn ``bí danh'' (alias) kiểu \cmd{rm='rm -i'}. Trong sách này, ta mô tả \textbf{hành vi mặc định gốc của macOS}. Nếu máy bạn hỏi trong khi sách nói ``không hỏi'', đó là do cấu hình riêng --- \textbf{đừng ỷ lại vào nó}, vì máy khác (đặc biệt là máy chủ thật ngoài đời) sẽ \textbf{KHÔNG} hỏi.
+\end{notebox}
+
+%% =========================================================
+\section{XEM nội dung file}
+
+Trước khi tạo file thật, ta cần một file để xem. Tạo nhanh một file vài dòng (lệnh \cmd{printf} dưới đây bạn cứ gõ y nguyên, ta sẽ học \cmd{echo}/\cmd{>} kỹ ở Mục 2):
+
+\begin{Verbatim}
+printf "Dong 1\nDong 2\nDong 3\nDong 4\nDong 5\nDong 6\n" > tho.txt
+\end{Verbatim}
+
+\cmd{\textbackslash n} nghĩa là ``xuống dòng''. File \cmd{tho.txt} giờ có 6 dòng.
+
+\subsection{\texttt{cat} --- in TOÀN BỘ file ra màn hình}
+
+\cmd{cat} (đọc là ``cát'', viết tắt của \textit{concatenate} = nối) đổ toàn bộ nội dung file ra Terminal.
+
+\begin{Verbatim}
+cat tho.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+Dong 1
+Dong 2
+Dong 3
+Dong 4
+Dong 5
+Dong 6
+\end{Verbatim}
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Dùng khi:} file \textbf{ngắn} (vài dòng đến vài chục dòng).
+\item \textbf{Đừng dùng khi:} file dài hàng nghìn dòng --- nó sẽ trôi vèo qua màn hình, bạn không kịp đọc.
+\end{itemize}
+
+\subsection{\texttt{less} --- cuộn xem file DÀI một cách thoải mái}
+
+\cmd{less} mở file trong một ``cửa sổ xem'' cho phép cuộn lên xuống, không làm rối Terminal.
+
+\begin{Verbatim}
+less tho.txt
+\end{Verbatim}
+
+Khi đang ở trong \cmd{less}:
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{5.5cm} >{\raggedright\arraybackslash}p{8cm}}
+\rowcolor{seniorbluebg}
+\textbf{Phím} & \textbf{Tác dụng} \\
+\hline
+$\downarrow$ / $\uparrow$ hoặc \cmd{j} / \cmd{k} & cuộn xuống / lên từng dòng \\
+\cmd{Space} & xuống một trang \\
+\cmd{/tu-khoa} rồi \cmd{Enter} & \textbf{tìm kiếm} chữ ``tu-khoa''; nhấn \cmd{n} để tới kết quả tiếp theo \\
+\cmd{q} & \textbf{thoát} (quan trọng nhất --- nhớ kỹ phím \cmd{q}!) \\
+\end{tabular}
+\end{center}
+
+\begin{notebox}[title={Trấn an}]
+Nhiều người mới hoảng vì ``vào \cmd{less} rồi không ra được''. Bí mật chỉ là: \textbf{nhấn \cmd{q}}. Thử ngay: gõ \cmd{less tho.txt}, cuộn vài cái, gõ \cmd{/Dong} rồi \cmd{Enter} (nó nhảy tới chữ ``Dong''), cuối cùng nhấn \cmd{q} để về Terminal.
+
+\vspace{0.5em}
+\textbf{Nếu lỡ gõ nhầm gì đó trong \cmd{less} và màn hình trông lạ} (ví dụ đang ở chế độ tìm kiếm, hay vừa bấm nhầm phím): cứ nhấn phím \cmd{Esc} một cái, rồi nhấn \cmd{q} --- gần như luôn đưa bạn về lại Terminal an toàn.
+\end{notebox}
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Dùng khi:} file dài, log dài, hoặc bạn muốn tìm một chữ trong file.
+\end{itemize}
+
+\subsection{\texttt{head} --- xem vài dòng ĐẦU}
+
+\begin{Verbatim}
+head -n 3 tho.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+Dong 1
+Dong 2
+Dong 3
+\end{Verbatim}
+
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{-n 3} nghĩa là ``lấy 3 dòng đầu''. Bỏ \cmd{-n 3} đi thì mặc định \cmd{head} lấy 10 dòng đầu.
+\item \textbf{Dùng khi:} chỉ muốn liếc nhanh phần đầu một file lớn (ví dụ kiểm tra một file dữ liệu có đúng định dạng không).
+\end{itemize}
+
+\subsection{\texttt{tail} --- xem vài dòng CUỐI}
+
+\begin{Verbatim}
+tail -n 2 tho.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+Dong 5
+Dong 6
+\end{Verbatim}
+
+\cmd{tail} còn một ``siêu năng lực'' rất quan trọng sau này: \textbf{theo dõi file đang được ghi thêm theo thời gian thực} bằng \cmd{tail -f} (chữ \cmd{f} = \textit{follow}, theo dõi):
+
+\begin{Verbatim}
+# (Chi gioi thieu - chua can chay bay gio)
+tail -f /duong-dan/toi/file-log.log
+\end{Verbatim}
+
+\begin{notebox}[title={Mẹo: Vì sao quan trọng?}]
+Khi bạn làm DevOps, máy chủ liên tục ghi \textbf{log} (nhật ký hoạt động) vào file. \cmd{tail -f} cho bạn ``xem trực tiếp'' những dòng mới xuất hiện --- như xem camera trực tiếp thay vì xem lại băng. Để thoát \cmd{tail -f}, nhấn \cmd{Control + C}. Ta sẽ dùng nhiều ở các chương về máy chủ; giờ chỉ cần biết nó tồn tại.
+\end{notebox}
+
+\begin{checkbox}[title={Tự kiểm tra 1}]
+File \cmd{tho.txt} có 6 dòng. Lệnh nào in ra đúng 2 dòng cuối? Lệnh nào để \textbf{thoát} khỏi \cmd{less}? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+%% =========================================================
+\section{TẠO file}
+
+\subsection{\texttt{touch} --- tạo file RỖNG (hoặc cập nhật thời gian)}
+
+\begin{Verbatim}
+touch trong.txt
+ls -l trong.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi} (đại khái):
+\begin{Verbatim}
+-rw-r--r--  1 ten-cua-ban  staff  0 Jun 26 10:00 trong.txt
+\end{Verbatim}
+
+\begin{itemize}[leftmargin=1.4em]
+\item Con số \cmd{0} (đứng trước ngày giờ) là \textbf{kích thước = 0 byte} $\rightarrow$ file hoàn toàn rỗng.
+\item \cmd{ls -l} là \cmd{ls} ở dạng ``danh sách dài'' (long), hiện thêm quyền, chủ sở hữu, kích thước, thời gian.
+\end{itemize}
+
+\begin{notebox}[title={Ghi chú: Máy bạn có thể hiển thị khác}]
+ngày giờ sẽ khác; \textbf{cột thứ hai} (tên chủ sở hữu, ví dụ \cmd{ten-cua-ban}) và \textbf{cột thứ ba} (tên nhóm) cũng tùy máy --- nhóm có thể là \cmd{staff}, \cmd{wheel}, \cmd{admin} hoặc tên khác đều bình thường, không phải lỗi. Điều \textbf{duy nhất} cần để ý là số \cmd{0} (kích thước) và tên \cmd{trong.txt}.
+\end{notebox}
+
+Nếu file \textbf{đã tồn tại}, \cmd{touch} không xóa nội dung --- nó chỉ \textbf{cập nhật lại thời gian sửa đổi} thành ``bây giờ''. (Tính năng này hữu ích về sau, ví dụ ép một công cụ build coi file là ``vừa mới thay đổi''.)
+
+\subsection{\texttt{echo} + \texttt{>} --- tạo file VÀ ghi nội dung (GHI ĐÈ)}
+
+\cmd{echo} đơn thuần là in một dòng chữ ra màn hình:
+
+\begin{Verbatim}
+echo "Xin chao file"
+\end{Verbatim}
+$\rightarrow$ in ra: \cmd{Xin chào file}
+
+Dấu \cmd{>} gọi là \textbf{chuyển hướng} (redirect): thay vì in ra màn hình, nó \textbf{đổ chữ đó vào file}:
+
+\begin{Verbatim}
+echo "Xin chao file" > ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+Xin chào file
+\end{Verbatim}
+
+\begin{dangerbox}[title={CỰC KỲ QUAN TRỌNG --- \texttt{>} luôn GHI ĐÈ}]
+Nếu \cmd{ghichu.txt} đã có sẵn nội dung, dấu \cmd{>} sẽ \textbf{xóa sạch nội dung cũ} và thay bằng nội dung mới, \textbf{không hỏi han gì cả}. Đây là một trong những cạm bẫy mất dữ liệu kinh điển nhất của người mới.
+\end{dangerbox}
+
+\subsection{\texttt{echo} + \texttt{>>} --- NỐI THÊM vào cuối file}
+
+Hai dấu \cmd{>>} nghĩa là ``thêm vào cuối, giữ nguyên nội dung cũ'':
+
+\begin{Verbatim}
+echo "Dong thu hai" >> ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+Xin chào file
+Dòng thứ hai
+\end{Verbatim}
+
+Bây giờ hãy \textbf{tự mình thấy sự khác biệt chết người} giữa \cmd{>} và \cmd{>>}. Chạy thử:
+
+\begin{Verbatim}
+echo "TOI GHI DE" > ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+TÔI GHI ĐÈ
+\end{Verbatim}
+
+Hai dòng cũ (``Xin chào file'' và ``Dòng thứ hai'') đã \textbf{biến mất vĩnh viễn}. Đó chính là \cmd{>}.
+
+Khôi phục lại để tiếp tục lab:
+\begin{Verbatim}
+echo "Xin chao file" > ghichu.txt
+echo "Dong thu hai" >> ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+
+\begin{dangerbox}[title={Bảng so sánh \texttt{>} và \texttt{>>}}]
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2cm} >{\raggedright\arraybackslash}p{2cm} >{\raggedright\arraybackslash}p{5cm} >{\raggedright\arraybackslash}p{3.5cm}}
+\textbf{Ký hiệu} & \textbf{Tên} & \textbf{Hành vi} & \textbf{Rủi ro} \\
+\hline
+\cmd{>} & ghi đè & \textbf{Xóa hết} nội dung cũ, ghi mới & \textbf{Cao} --- mất dữ liệu nếu nhầm \\
+\cmd{>>} & nối thêm & Giữ cũ, thêm vào cuối & Thấp \\
+\end{tabular}
+\end{dangerbox}
+
+\begin{checkbox}[title={Tự kiểm tra 2}]
+Bạn có file \cmd{cauhinh.txt} đang chứa 100 dòng cấu hình quý giá. Bạn muốn thêm 1 dòng vào cuối. Gõ \cmd{echo "dong moi" > cauhinh.txt} hay \cmd{echo "dong moi" >> cauhinh.txt}? Vì sao? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+\begin{seniorbox}[title={Góc Senior \#1 --- \texttt{>} vs \texttt{>>} và bài học ``không hoàn tác''}]
+Trong production, người ta hiếm khi gõ tay \cmd{echo > file}. Nhưng \cmd{>} xuất hiện \textit{khắp nơi} trong script tự động. Một dòng script viết nhầm \cmd{>} thành nơi đáng ra phải là \cmd{>>} có thể \textbf{xóa trắng file log hoặc file cấu hình} của hàng nghìn máy chủ chỉ trong một nốt nhạc. Quy tắc của người kỳ cựu:
+
+\begin{itemize}[leftmargin=1.4em]
+\item Khi \textbf{muốn thêm} $\rightarrow$ luôn \cmd{>>}. Khi \textbf{cố ý thay mới toàn bộ} $\rightarrow$ mới dùng \cmd{>}, và phải tỉnh táo.
+\item Trước khi chạy script có \cmd{>} lên file thật, \textbf{backup} (sao lưu) file đó trước. ``Không hoàn tác được'' là đặc tính cốt lõi của dòng lệnh --- bạn không có nút Undo như trong Word.
+\end{itemize}
+\end{seniorbox}
+
+%% =========================================================
+\section{SAO CHÉP file và thư mục --- \texttt{cp}}
+
+\cmd{cp} = \textit{copy}. Cú pháp: \cmd{cp <nguon> <dich>}. Nguồn được giữ nguyên; đích là bản sao mới.
+
+\subsection{Sao chép một file}
+
+\begin{Verbatim}
+cp ghichu.txt ghichu-backup.txt
+ls
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi} (\cmd{ls} hiện ra, thứ tự có thể khác):
+\begin{Verbatim}
+ghichu-backup.txt   ghichu.txt   tho.txt   trong.txt
+\end{Verbatim}
+
+Giờ bạn có 2 file giống hệt nhau: bản gốc \cmd{ghichu.txt} và bản sao \cmd{ghichu-backup.txt}.
+
+\subsection{Sao chép cả THƯ MỤC --- cần \texttt{-R}}
+
+Nếu bạn thử \cmd{cp} một thư mục mà không có cờ đặc biệt, macOS sẽ báo lỗi (đại khái) kiểu:
+\begin{Verbatim}
+cp: hop-tai-lieu is a directory (not copied).
+\end{Verbatim}
+Để sao chép thư mục cùng toàn bộ nội dung bên trong, dùng cờ \cmd{-R}:
+
+\begin{Verbatim}
+mkdir hop-tai-lieu
+cp ghichu.txt hop-tai-lieu/
+cp -R hop-tai-lieu hop-tai-lieu-backup
+ls
+ls hop-tai-lieu-backup
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} thư mục \cmd{hop-tai-lieu-backup} xuất hiện, và bên trong nó có \cmd{ghichu.txt}.
+
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{-R} = \textit{recursive} (\textbf{đệ quy} --- đây là lần đầu ta gặp từ này trong bài) = ``đi vào thư mục, sao chép luôn mọi thứ bên trong, kể cả thư mục con của thư mục con\ldots''.
+\item \textbf{Trên macOS/BSD, \cmd{-R} (chữ hoa) là cách viết chuẩn} cho sao chép thư mục. Cờ \cmd{-r} (chữ thường) cũng được chấp nhận, nhưng hãy quen dùng \cmd{-R} cho đúng chuẩn macOS.
+\end{itemize}
+
+\subsection{\texttt{cp -i} --- hỏi trước khi GHI ĐÈ (an toàn)}
+
+Mặc định, nếu đích \textbf{đã tồn tại}, \cmd{cp} sẽ \textbf{ghi đè im lặng} --- nuốt mất file đích cũ. Cờ \cmd{-i} (\textit{interactive}, hỏi tương tác) bắt nó dừng lại hỏi bạn:
+
+\begin{Verbatim}
+cp -i tho.txt ghichu.txt
+\end{Verbatim}
+
+Vì \cmd{ghichu.txt} đã tồn tại, bạn sẽ thấy câu hỏi:
+\begin{Verbatim}
+overwrite ghichu.txt? (y/n [n])
+\end{Verbatim}
+
+Gõ \cmd{n} rồi \cmd{Enter} để \textbf{từ chối} (giữ nguyên \cmd{ghichu.txt}).
+
+\begin{notebox}[title={Trấn an}]
+gõ \cmd{n} là an toàn --- không có gì bị thay đổi. Cứ mạnh dạn thử rồi gõ \cmd{n}.
+\end{notebox}
+
+\begin{checkbox}[title={Tự kiểm tra 3}]
+Vì sao \cmd{cp -i} an toàn hơn \cmd{cp} thường khi file đích đã tồn tại? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+\begin{seniorbox}[title={Góc Senior \#2 --- \texttt{cp -a} khi backup, và ``copy giữ nguyên hồn vía''}]
+Khi sao lưu thật (không chỉ chép nội dung mà còn muốn giữ \textbf{quyền truy cập, thời gian tạo, liên kết tượng trưng}\ldots), Senior dùng \cmd{cp -a} (\textit{archive} --- lưu trữ). Nó như \cmd{cp -R} nhưng \textbf{giữ nguyên thuộc tính} của file. Ví dụ sao lưu một thư mục dự án mà vẫn giữ đúng quyền:
+
+\begin{Verbatim}
+cp -a hop-tai-lieu hop-tai-lieu-archive
+\end{Verbatim}
+
+Vì sao quan trọng trong production? Một file cấu hình bị đổi quyền sau khi copy có thể khiến dịch vụ \textbf{không khởi động được}, hoặc tệ hơn, \textbf{để lộ quyền} cho người không đáng. ``Sao chép đúng cách'' cũng là một kỹ năng an toàn.
+\end{seniorbox}
+
+%% =========================================================
+\section{DI CHUYỂN và ĐỔI TÊN --- \texttt{mv}}
+
+\cmd{mv} = \textit{move}. Một lệnh, hai công dụng:
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Di chuyển} file/thư mục sang chỗ khác.
+\item \textbf{Đổi tên} file/thư mục (bản chất là ``di chuyển sang chính chỗ cũ nhưng với tên mới'').
+\end{itemize}
+
+\subsection{Đổi tên}
+
+\begin{Verbatim}
+mv trong.txt ghi-chu-2.txt
+ls
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} \cmd{trong.txt} biến mất, thay vào đó có \cmd{ghi-chu-2.txt}. Nội dung (rỗng) vẫn nguyên, chỉ cái tên thay đổi.
+
+\subsection{Di chuyển vào thư mục}
+
+\begin{Verbatim}
+mkdir luu-tru
+mv ghichu-backup.txt luu-tru/
+ls
+ls luu-tru
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} \cmd{ghichu-backup.txt} không còn ở thư mục hiện tại nữa, mà nằm trong \cmd{luu-tru/}.
+
+\subsection{\texttt{mv -i} --- hỏi trước khi GHI ĐÈ}
+
+\begin{dangerbox}[title={Lưu ý: \texttt{mv} ghi đè im lặng}]
+Giống \cmd{cp}, \textbf{\cmd{mv} ghi đè im lặng} nếu đích trùng tên. Khác biệt còn nguy hiểm hơn \cmd{cp}: với \cmd{cp}, file nguồn vẫn còn; với \cmd{mv} ghi đè, bạn vừa \textbf{mất file đích cũ}, vừa không còn bản nào khác của nó.
+\end{dangerbox}
+
+Cờ \cmd{-i} cứu bạn:
+
+\begin{Verbatim}
+mv -i ghi-chu-2.txt ghichu.txt
+\end{Verbatim}
+
+Sẽ hiện:
+\begin{Verbatim}
+overwrite ghichu.txt? (y/n [n])
+\end{Verbatim}
+
+Gõ \cmd{n} để giữ an toàn (không đổi gì). Nếu thật sự muốn đè thì mới gõ \cmd{y}.
+
+\begin{checkbox}[title={Tự kiểm tra 4}]
+Sau \cmd{mv a.txt b.txt} (trong đó \cmd{b.txt} đã tồn tại từ trước và bạn KHÔNG dùng \cmd{-i}), điều gì xảy ra với nội dung cũ của \cmd{b.txt}? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+\begin{seniorbox}[title={Góc Senior \#3 --- \texttt{mv} giữa hai phân vùng thực ra là ``copy + delete''}]
+Khi \cmd{mv} trong \textbf{cùng một ổ đĩa/phân vùng}, hệ thống chỉ đổi ``nhãn địa chỉ'' --- nhanh tức thì, dù file nặng vài GB. Nhưng khi \cmd{mv} \textbf{sang ổ khác} (ví dụ từ ổ trong ra ổ USB ngoài), thực chất hệ thống phải \textbf{sao chép toàn bộ dữ liệu sang, rồi xóa bản gốc}. Hệ quả thực tế:
+
+\begin{itemize}[leftmargin=1.4em]
+\item Di chuyển file lớn sang ổ ngoài sẽ \textbf{chậm} và \textbf{tốn dung lượng tạm thời} ở cả hai nơi.
+\item Nếu quá trình bị ngắt giữa chừng (rút USB, mất điện), bạn có thể có \textbf{file sao chép dở dang}. $\rightarrow$ Senior thường copy xong, \textbf{kiểm tra}, rồi mới xóa nguồn, thay vì tin tưởng tuyệt đối vào \cmd{mv} qua ổ ngoài.
+\end{itemize}
+\end{seniorbox}
+
+%% =========================================================
+\section{XÓA file --- phần NGUY HIỂM NHẤT, đọc kỹ}
+
+\begin{dangerbox}[title={CẢNH BÁO LỚN NHẤT CỦA CẢ CHƯƠNG}]
+Trên Terminal, \cmd{rm} \textbf{KHÔNG đưa file vào Thùng rác (Trash)} như khi bạn kéo file trong Finder. \cmd{rm} \textbf{xóa thẳng, không hoàn tác được bằng cách thông thường}. Không có nút Undo, không có ``khôi phục từ Thùng rác''. Hãy đối xử với \cmd{rm} như một con dao sắc: cực kỳ hữu ích, nhưng phải cầm cẩn thận.
+\end{dangerbox}
+
+\subsection{\texttt{rm} --- xóa một file}
+
+Trước khi xóa, \textbf{luôn \cmd{ls} để nhìn mình sắp xóa gì} --- và nếu sắp dùng \cmd{rm -r} hay \cmd{*}, hãy \cmd{pwd} để chắc chắn mình \textbf{đang đứng đúng thư mục} (đây là thói quen vàng, ta sẽ nhắc lại nhiều lần):
+
+\begin{Verbatim}
+ls
+rm tho.txt
+ls
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} sau lệnh \cmd{rm}, \cmd{tho.txt} biến mất khỏi danh sách. Vĩnh viễn.
+
+\subsection{\texttt{rm -i} --- hỏi xác nhận từng file (an toàn cho người mới)}
+
+\begin{Verbatim}
+rm -i ghichu.txt
+\end{Verbatim}
+
+Hiện (lưu ý: prompt của \cmd{rm -i} \textbf{khác} với \cmd{cp -i}/\cmd{mv -i} --- nó \textbf{không} có gợi ý \cmd{[n]}):
+\begin{Verbatim}
+remove ghichu.txt?
+\end{Verbatim}
+
+Gõ \cmd{y} rồi \cmd{Enter} để xóa, hoặc \cmd{n} để giữ lại.
+
+\begin{notebox}[title={Trấn an quan trọng}]
+Với \cmd{rm -i}, nếu bạn \textbf{chỉ nhấn \cmd{Enter}} mà không gõ gì, file sẽ \textbf{KHÔNG bị xóa} (mặc định coi như ``không''). Tức là khi phân vân, cứ nhấn \cmd{Enter} là an toàn. Với người mới, \textbf{tập thói quen luôn dùng \cmd{rm -i}} cho tới khi bạn thật vững.
+\end{notebox}
+
+\subsection{\texttt{rmdir} --- chỉ xóa thư mục RỖNG (an toàn)}
+
+\cmd{rmdir} (\textit{remove directory}) chỉ xóa được thư mục \textbf{không còn gì bên trong}. Đây là một ``lưới an toàn'' tự nhiên: nếu thư mục còn file, nó sẽ từ chối, nhắc bạn rằng ``ê, trong này còn đồ đấy''.
+
+\begin{Verbatim}
+mkdir thu-muc-rong
+rmdir thu-muc-rong
+ls
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} \cmd{thu-muc-rong} biến mất, không báo lỗi.
+
+Thử xóa một thư mục \textbf{còn nội dung} bằng \cmd{rmdir}:
+
+\begin{Verbatim}
+rmdir luu-tru
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi} (báo lỗi --- đây là điều TỐT):
+\begin{Verbatim}
+rmdir: luu-tru: Directory not empty
+\end{Verbatim}
+
+\begin{notebox}[title={Trấn an}]
+dòng ``Directory not empty'' \textbf{không phải lỗi của bạn} --- đó là \cmd{rmdir} đang \textbf{bảo vệ bạn}, không cho lỡ tay xóa thư mục còn dữ liệu.
+\end{notebox}
+
+\subsection{\texttt{rm -r} --- xóa thư mục VÀ toàn bộ nội dung (đệ quy)}
+
+Khi bạn \textbf{thật sự} muốn xóa cả thư mục lẫn mọi thứ bên trong, dùng \cmd{rm -r} (\cmd{-r} = recursive, \textbf{đệ quy} --- đi vào và xóa hết mọi thứ bên trong, kể cả thư mục con):
+
+\begin{Verbatim}
+pwd
+ls luu-tru
+rm -r luu-tru
+ls
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} cả \cmd{luu-tru} lẫn \cmd{ghichu-backup.txt} bên trong nó đều biến mất.
+
+\begin{dangerbox}[title={Quy tắc vàng nâng cấp cho \texttt{rm -r}}]
+\cmd{rm -r} mạnh và \textbf{không hỏi}. Nó cuốn sạch cả cây thư mục. Vì vậy:
+
+\vspace{0.4em}
+\centering\textbf{\cmd{pwd} trước (mình ĐANG Ở ĐÂU?) $\rightarrow$ \cmd{ls} (mình SẮP XÓA GÌ?) $\rightarrow$ rồi mới \cmd{rm -r}.}
+\vspace{0.4em}
+
+\raggedright
+Vì sao cần cả \cmd{pwd}? Vì rủi ro lớn nhất của \cmd{rm -r} không phải là ``xóa nhầm file trong thư mục đúng'', mà là \textbf{bạn đang đứng nhầm thư mục mà không biết}. \cmd{ls} chỉ cho thấy \textit{nội dung} --- nếu bạn đứng nhầm chỗ, \cmd{ls} vẫn hiện ra một danh sách trông ``hợp lý'' và bạn vẫn xóa nhầm. Chỉ có \cmd{pwd} mới xác nhận \textbf{vị trí}.
+\end{dangerbox}
+
+\begin{notebox}[title={Mẹo an toàn cho người mới --- \texttt{rm -ri}}]
+Bạn có thể \textbf{ghép} \cmd{-r} với \cmd{-i} thành \cmd{rm -ri thumuc}. Lệnh này xóa đệ quy cả cây thư mục \textbf{nhưng hỏi xác nhận từng mục một}. Khi bạn cần xóa một thư mục mà chưa thật chắc chắn bên trong có gì, \cmd{rm -ri} là cách thận trọng: bạn nhìn từng cái rồi mới gật đầu. (\cmd{-r} và \cmd{-i} \textbf{không} loại trừ nhau.)
+\end{notebox}
+
+\begin{checkbox}[title={Tự kiểm tra 5}]
+Bạn muốn xóa thư mục \cmd{tam} còn chứa 3 file bên trong. \cmd{rmdir tam} hay \cmd{rm -r tam}? Và bạn nên gõ những lệnh nào \textit{trước} để nhìn cho chắc? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+\subsection{\texttt{rm -rf} và những thảm họa kinh điển --- ĐỌC THẬT KỸ}
+
+\cmd{rm -rf} ghép hai cờ:
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{-r} = đệ quy (xóa cả cây thư mục).
+\item \cmd{-f} = \textit{force} (ép buộc) = ``đừng hỏi gì hết, đừng báo lỗi, cứ xóa''.
+\end{itemize}
+
+Tức là \cmd{rm -rf} = \textbf{``xóa sạch mọi thứ, không hỏi, không cảnh báo''}. Đây là lệnh phá hủy mạnh nhất bạn gặp trong chương này.
+
+\begin{dangerbox}[title={TUYỆT ĐỐI GHI NHỚ --- những lệnh KHÔNG BAO GIỜ được gõ liều}]
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{rm -rf /} $\rightarrow$ lệnh phá hủy có chủ đích nhắm vào \textbf{gốc hệ thống} \cmd{/}. \textit{Lưu ý chính xác về macOS:} macOS hiện đại có cơ chế bảo vệ tên là \textbf{SIP (System Integrity Protection)}, và bản thân \cmd{rm} cũng có ``phanh'' từ chối xóa thẳng \cmd{/}, nên trên thực tế \textbf{một phần lớn hệ thống được bảo vệ và lệnh này có thể không xóa hết được}. Nhưng đừng vì thế mà coi thường: nó \textbf{vẫn có thể phá hỏng dữ liệu cá nhân của bạn và làm hỏng hệ điều hành}. \textbf{Tuyệt đối không bao giờ thử.}
+\item \cmd{rm -rf \textasciitilde{}} $\rightarrow$ xóa \textbf{toàn bộ thư mục nhà} của bạn: tài liệu, hình ảnh, mọi thứ bạn tạo ra. Phần này \textbf{không} được SIP bảo vệ $\rightarrow$ mất là mất thật.
+\item \cmd{rm -rf *} khi đang đứng nhầm thư mục $\rightarrow$ xóa sạch mọi thứ trong thư mục đó.
+\end{itemize}
+
+Trên macOS, những thứ bị xóa kiểu này \textbf{không vào Thùng rác để bạn lôi ra lại}. Mất là mất.
+\end{dangerbox}
+
+\textbf{Quy tắc sống còn:}
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{Không bao giờ} gõ \cmd{rm -rf} với đường dẫn bắt đầu bằng \cmd{/} hoặc \cmd{\textasciitilde{}} trừ khi bạn đã suy nghĩ rất kỹ và 100\% chắc chắn.
+\item \textbf{Luôn \cmd{pwd} rồi \cmd{ls} trước} để biết chính xác mình \textbf{đang ở đâu} và \textbf{sắp xóa gì}.
+\item \textbf{Gõ chậm}, đặc biệt khi có \cmd{rm}, có \cmd{-rf}, hoặc có dấu \cmd{*}.
+\item Khi học, dùng \cmd{rm -i} (hoặc \cmd{rm -ri} cho thư mục) thay cho \cmd{rm -f}. \cmd{-i} hỏi để cứu bạn; \cmd{-f} thì không.
+\end{enumerate}
+
+%% =========================================================
+\section{KÝ TỰ ĐẠI DIỆN (wildcard / glob) --- sơ lược nhưng phải biết cảnh giác}
+
+\textbf{Ký tự đại diện} (\textit{wildcard}, hay \textit{glob}) là cách nói ``khớp với nhiều file một lúc''. Phổ biến nhất là dấu \textbf{\cmd{*}} = ``khớp với bất kỳ chuỗi ký tự nào''.
+
+Tạo vài file để thử (an toàn, trong sân tập):
+
+\begin{Verbatim}
+touch a.txt b.txt c.txt ghichu.log
+ls *.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} chỉ liệt kê các file kết thúc bằng \cmd{.txt}:
+\begin{Verbatim}
+a.txt   b.txt   c.txt
+\end{Verbatim}
+
+\cmd{*.txt} nghĩa là ``mọi file có tên kết thúc bằng \cmd{.txt}''. File \cmd{ghichu.log} không khớp nên không hiện.
+
+\begin{notebox}[title={Một điểm quan trọng cần biết về \texttt{*}}]
+dấu \cmd{*} \textbf{không khớp các file ẩn} (file có tên bắt đầu bằng dấu chấm, ví dụ \cmd{.bashrc}). Vì vậy \cmd{rm *} xóa mọi file \textbf{thường} nhưng \textbf{bỏ qua file ẩn}. Đừng dựa vào điều này để ``dọn sạch'' thư mục --- nó chỉ là một chi tiết kỹ thuật, không phải lưới an toàn.
+\end{notebox}
+
+\begin{dangerbox}[title={Cạm bẫy \texttt{*} + \texttt{rm} --- hai rủi ro tách bạch}]
+\textbf{Rủi ro 1 --- bản thân \cmd{rm *} đã đủ nguy hiểm.} Lệnh \cmd{rm *.txt} xóa \textbf{MỌI file \cmd{.txt}} trong thư mục hiện tại cùng một lúc; còn \cmd{rm *} (chỉ một dấu sao) xóa \textbf{MỌI file thường} trong thư mục. Đây là rủi ro \textbf{chính} của wildcard: một lệnh ngắn tác động lên rất nhiều file, và \textbf{không hoàn tác được}. Bạn không cần gõ sai gì cả --- chỉ cần đứng nhầm thư mục là đủ thành thảm họa.
+
+\vspace{0.6em}
+\textbf{Rủi ro 2 --- gõ thừa dấu cách.} Một dấu cách thừa biến \cmd{rm *.txt} thành \cmd{rm * .txt}. Khi đó shell \textbf{mở rộng \cmd{*} thành TẤT CẢ file trong thư mục TRƯỚC}, xóa sạch chúng; phần \cmd{.txt} phía sau chỉ được hiểu là \textbf{một tên file riêng} tên đúng là \cmd{.txt} (thường không tồn tại). Hậu quả: \cmd{rm} sẽ in thêm một dòng lỗi kiểu \cmd{rm: .txt: No such file or directory} --- \textbf{nhưng đừng nhầm dòng lỗi đó là ``lệnh không chạy gì''}: thực tế \cmd{*} đã kịp xóa sạch mọi file \textit{trước khi} dòng lỗi xuất hiện. (Cùng cơ chế: một dấu cách lạc kiểu \cmd{rm -rf / tmp} thay vì \cmd{rm -rf /tmp} là cạm bẫy chết người riêng --- luôn soi kỹ dấu cách quanh \cmd{/}.)
+
+\vspace{0.6em}
+\textbf{Vì vậy, quy tắc tuyệt đối:} trước khi \cmd{rm} với \cmd{*}, hãy chạy \cmd{pwd} (đúng thư mục chưa?) rồi \cmd{ls} với \textbf{cùng mẫu} đó để xem danh sách:
+\end{dangerbox}
+
+\begin{Verbatim}
+pwd           # minh co dang dung dung thu muc khong?
+ls *.txt      # xem truoc: minh sap xoa dung nhung file nay chu?
+rm *.txt      # gio moi xoa, vi da nhin tan mat
+\end{Verbatim}
+
+Chạy thử an toàn trong lab:
+\begin{Verbatim}
+pwd
+ls *.txt
+rm *.txt
+ls
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} \cmd{a.txt}, \cmd{b.txt}, \cmd{c.txt} biến mất; \cmd{ghichu.log} vẫn còn (vì không khớp \cmd{*.txt}).
+
+\begin{checkbox}[title={Tự kiểm tra 6}]
+\cmd{ls *.txt} cho thấy 3 file. Bạn yên tâm gõ \cmd{rm *.txt}. Vì sao bước \cmd{ls} (và \cmd{pwd}) trước đó lại quan trọng đến vậy? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+\begin{seniorbox}[title={Góc Senior \#4 --- quoting, \texttt{-{}-}, idempotent, alias an toàn, và vì sao ``biến rỗng'' giết cả hệ thống}]
+Đây là phần ``tư duy người kỳ cựu'' --- đọc để hiểu \textbf{vì sao}, chưa cần thuộc lòng.
+
+\vspace{0.5em}
+\textbf{(a) Thảm họa biến rỗng --- bài học triệu đô.} Trong script, người ta hay viết:
+\begin{Verbatim}
+rm -rf "$DIR"/
+\end{Verbatim}
+Ý định: xóa nội dung thư mục lưu trong biến \cmd{DIR}. \textbf{Nhưng nếu vì lỗi nào đó \cmd{DIR} bị rỗng} (chưa gán giá trị), dòng trên trở thành:
+\begin{Verbatim}
+rm -rf /
+\end{Verbatim}
+$\rightarrow$ nhắm vào gốc hệ thống. Đây là loại bug đã từng xóa sập sản phẩm của nhiều công ty thật (trên các hệ Linux không có SIP, hậu quả là toàn bộ máy chủ). Bài học: luôn kiểm tra biến trước khi đưa vào \cmd{rm}, và \textbf{không tin tưởng mù quáng vào biến}.
+
+\vspace{0.5em}
+\textbf{(b) Quoting (đặt trong dấu nháy).} Tên file có dấu cách như \cmd{bao cao.txt} mà không bọc nháy sẽ bị hiểu thành \textbf{hai} đối số \cmd{bao} và \cmd{cao.txt}. Senior luôn bọc: \cmd{rm "bao cao.txt"}.
+
+\vspace{0.5em}
+\textbf{(c) Dấu \cmd{-{}-} để kết thúc danh sách tùy chọn.} Một file lỡ tên là \cmd{-rf} sẽ bị \cmd{rm} hiểu nhầm thành cờ. \cmd{rm -{}- -rf} báo cho \cmd{rm}: ``hết tùy chọn rồi, phần sau là TÊN FILE''. Mẹo nhỏ nhưng cứu nguy thật.
+
+\vspace{0.5em}
+\textbf{(d) Idempotent (tính ``lặp-an-toàn'').} Một thao tác \textit{idempotent} là thao tác \textbf{chạy 1 lần hay 10 lần đều đưa hệ thống về cùng một trạng thái cuối} --- chạy lại không gây thêm tác dụng phụ và không báo lỗi. (Lưu ý: đây \textbf{không} phải ``bất biến/không thay đổi gì'' --- lần chạy đầu vẫn thay đổi trạng thái; cái ``an toàn'' là ở những lần lặp sau.) Ví dụ: \cmd{mkdir -p \textasciitilde/linux-lab/ch3} là idempotent (chạy lại không lỗi, thư mục vẫn ở đó); còn \cmd{rm} thì không (chạy lần 2 báo ``không tìm thấy file''). DevOps quý tính idempotent vì script tự động hay chạy lặp, và ta cần kết quả \textbf{dự đoán được}.
+
+\vspace{0.5em}
+\textbf{(e) Lưới an toàn không phụ thuộc trí nhớ --- alias và ``Trash''.} Vì con người hay quên gõ \cmd{-i} đúng lúc nguy hiểm nhất, nhiều người đặt sẵn một ``bí danh'' (alias) trong file cấu hình shell để \cmd{rm} \textbf{luôn} hỏi:
+\begin{Verbatim}
+alias rm='rm -i'
+\end{Verbatim}
+Ngoài ra còn có những công cụ ``đưa file vào Thùng rác thay vì xóa thẳng'' (ví dụ lệnh \cmd{trash} cài thêm) để bạn còn đường khôi phục. \textbf{Nhưng nhớ kỹ:} alias chỉ tồn tại trên \textit{máy của bạn}. Khi sang máy chủ thật hoặc máy đồng nghiệp, \cmd{rm} lại ``trần trụi'' và \textbf{không hỏi}. $\rightarrow$ Hãy coi alias/Trash là \textit{lưới an toàn phụ}, còn thói quen \cmd{pwd} + \cmd{ls} + gõ chậm mới là \textit{kỹ năng gốc}.
+
+\vspace{0.5em}
+\textbf{(f) Vì sao ``backup trước thao tác phá hủy''.} Senior luôn tự hỏi: \textit{``Nếu lệnh này sai, mình mất gì? Khôi phục được không?''} Nếu câu trả lời là ``mất nhiều, khó khôi phục'' $\rightarrow$ \textbf{backup trước}, rồi mới làm.
+\end{seniorbox}
+
+%% =========================================================
+\section{LAB CHÍNH --- gõ tay toàn bộ, an toàn 100\% (chỉ trong \texttt{\textasciitilde/linux-lab/ch3})}
+
+\begin{labbox}[title={Thực hành ngay --- Lab chính}]
+Đây là bài thực hành ``chính thức'' gói gọn tất cả những gì đã học. Hãy gõ \textbf{từng dòng}, đọc kết quả, rồi mới sang dòng tiếp theo. (Nếu trước đó bạn đã lỡ tạo/xóa lung tung, không sao --- bước 1 dựng lại sạch sẽ.)
+\end{labbox}
+
+\textbf{Bước 1 --- Tạo \& vào sân tập:}
+\begin{Verbatim}
+mkdir -p ~/linux-lab/ch3
+cd ~/linux-lab/ch3
+pwd
+\end{Verbatim}
+\textit{Mong đợi:} \cmd{pwd} in ra đường dẫn kết thúc bằng \cmd{/linux-lab/ch3}.
+
+\textbf{Bước 2 --- Tạo file có nội dung:}
+\begin{Verbatim}
+echo "Xin chao file" > ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+\textit{Mong đợi:}
+\begin{Verbatim}
+Xin chào file
+\end{Verbatim}
+
+\textbf{Bước 3 --- Nối thêm, rồi so sánh với ghi đè:}
+\begin{Verbatim}
+echo "Dong thu hai" >> ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+\textit{Mong đợi (2 dòng):}
+\begin{Verbatim}
+Xin chào file
+Dòng thứ hai
+\end{Verbatim}
+\textit{(Ghi nhớ: nếu lúc nãy bạn dùng \cmd{>} thay vì \cmd{>>}, dòng đầu sẽ bị xóa mất. Đó là khác biệt sống còn.)}
+
+\textbf{Bước 4 --- Tạo file rỗng và soi kích thước:}
+\begin{Verbatim}
+touch trong.txt
+ls -l
+\end{Verbatim}
+\textit{Mong đợi:} trong danh sách, \cmd{trong.txt} có kích thước \cmd{0}.
+
+\textbf{Bước 5 --- Sao chép:}
+\begin{Verbatim}
+cp ghichu.txt ghichu-backup.txt
+ls
+\end{Verbatim}
+\textit{Mong đợi:} thấy cả \cmd{ghichu.txt} và \cmd{ghichu-backup.txt}.
+
+\textbf{Bước 6 --- Đổi tên \& di chuyển:}
+\begin{Verbatim}
+mv trong.txt ghi-chu-2.txt
+mkdir luu-tru
+mv ghichu-backup.txt luu-tru/
+ls
+ls luu-tru
+\end{Verbatim}
+\textit{Mong đợi:} \cmd{trong.txt} thành \cmd{ghi-chu-2.txt}; \cmd{ghichu-backup.txt} nằm trong \cmd{luu-tru/}, không còn ở thư mục hiện tại.
+
+\textbf{Bước 7 --- Xóa an toàn có hỏi, rồi ``ls trước rm sau'':}
+\begin{Verbatim}
+rm -i ghi-chu-2.txt
+\end{Verbatim}
+Khi hỏi \cmd{remove ghi-chu-2.txt?} $\rightarrow$ gõ \cmd{y} rồi \cmd{Enter}. (Nhớ: nếu chỉ nhấn \cmd{Enter} không gõ gì, file sẽ \textbf{không} bị xóa.)
+\begin{Verbatim}
+ls
+rm ghichu.txt
+ls
+\end{Verbatim}
+\textit{Mong đợi:} \cmd{ghi-chu-2.txt} và \cmd{ghichu.txt} lần lượt biến mất.
+
+\textbf{Bước 8 --- Dọn toàn bộ sân tập ch3 (dùng \cmd{rm -r} CÓ CHỦ ĐÍCH):}
+\begin{Verbatim}
+cd ~
+pwd
+rm -r ~/linux-lab/ch3
+ls ~/linux-lab
+\end{Verbatim}
+\textit{Mong đợi:} \cmd{pwd} in ra thư mục nhà của bạn (kết thúc bằng tên tài khoản, ví dụ \cmd{/Users/ten-cua-ban}); sau \cmd{rm -r}, thư mục \cmd{ch3} biến mất khỏi \cmd{\textasciitilde/linux-lab}.
+
+\begin{notebox}[title={Vì sao ở đây ta được phép dùng \texttt{rm -r}?}]
+Vì hội tụ đủ điều kiện an toàn:
+\begin{enumerate}[leftmargin=1.8em]
+\item Đường dẫn \textbf{viết rõ ràng, tường minh} (\cmd{\textasciitilde/linux-lab/ch3}) --- không dùng biến chưa rõ, không dùng \cmd{*} mơ hồ.
+\item Đây là \textbf{thư mục tập của chính bạn}, nội dung chỉ là file thực hành, mất cũng không sao.
+\item Bạn đã \cmd{cd \textasciitilde{}} rồi \cmd{pwd} để \textbf{xác nhận mình không đứng bên trong} thư mục sắp xóa, và biết rõ mình đang ở đâu.
+\end{enumerate}
+Đây chính là cách Senior dùng \cmd{rm -r}: \textbf{có chủ đích, đường dẫn rõ ràng (không phải \cmd{./} mơ hồ), đã \cmd{pwd} xác nhận vị trí, đã suy nghĩ trước.} Không bao giờ là ``gõ cho nhanh''.
+\end{notebox}
+
+%% =========================================================
+\section{HIỂU LẦM THƯỜNG GẶP (đọc để khỏi ``dính bẫy'')}
+
+\renewcommand{\arraystretch}{1.35}
+\begin{longtable}{>{\raggedright\arraybackslash}p{6cm} >{\raggedright\arraybackslash}p{8.5cm}}
+\rowcolor{seniorbluebg}
+\textbf{Hiểu lầm (SAI)} & \textbf{Sự thật (ĐÚNG)} \\
+\hline
+\endhead
+``\cmd{rm} đưa file vào Thùng rác như Finder.'' & \textbf{SAI.} \cmd{rm} xóa thẳng, \textbf{không} qua Thùng rác, không hoàn tác bằng cách thông thường. \\
+``\cmd{>} và \cmd{>>} na ná nhau.'' & \textbf{SAI.} \cmd{>} \textbf{ghi đè} (xóa nội dung cũ); \cmd{>>} \textbf{nối thêm}. Nhầm là mất dữ liệu. \\
+``Xóa nhầm thì khôi phục dễ mà.'' & \textbf{Không nên trông cậy.} Có công cụ khôi phục chuyên sâu nhưng phức tạp, tốn kém, không chắc thành công. Cách an toàn duy nhất là \textbf{đừng xóa nhầm} + \textbf{backup}. \\
+``\cmd{cp}/\cmd{mv} sẽ hỏi trước khi đè.'' & \textbf{SAI} theo mặc định --- chúng \textbf{đè im lặng}. Muốn được hỏi phải thêm \cmd{-i}. (Trừ khi máy bạn đã cài alias sẵn --- đừng ỷ lại.) \\
+``\cmd{rmdir} xóa được mọi thư mục.'' & \textbf{SAI.} \cmd{rmdir} chỉ xóa thư mục \textbf{rỗng}. Thư mục còn nội dung cần \cmd{rm -r} (cẩn thận). \\
+``\cmd{-r} và \cmd{-i} loại trừ nhau.'' & \textbf{SAI.} Ghép được: \cmd{rm -ri thumuc} xóa đệ quy \textbf{nhưng hỏi từng mục} --- rất hợp cho người mới. \\
+``\cmd{ls} trước là đủ an toàn để \cmd{rm -r}.'' & \textbf{Chưa đủ.} \cmd{ls} cho biết \textit{nội dung}, không cho biết \textit{vị trí}. Phải \cmd{pwd} để chắc mình không \textbf{đứng nhầm thư mục}. \\
+``\cmd{rm *} xóa sạch MỌI thứ kể cả file ẩn.'' & \textbf{SAI.} \cmd{*} \textbf{không khớp file ẩn} (bắt đầu bằng dấu chấm). \cmd{rm *} xóa file thường, bỏ qua file ẩn --- nhưng đừng dựa vào đó. \\
+``\cmd{rm -rf /} chắc chắn hủy diệt cả máy Mac.'' & \textbf{Không chính xác.} macOS có SIP bảo vệ phần lớn hệ thống nên có thể không xóa hết --- nhưng nó \textbf{vẫn phá dữ liệu và hỏng hệ thống}. Tuyệt đối không thử. \\
+``\cmd{-r} và \cmd{-R} trong \cmd{cp} khác nhau lớn trên macOS.'' & Cả hai đều sao chép đệ quy; \textbf{\cmd{-R} là chuẩn BSD/macOS}, cứ quen dùng \cmd{-R}. \\
+\end{longtable}
+
+%% =========================================================
+\section{THẺ GHI NHỚ (flashcards)}
+
+Che cột phải, tự trả lời, rồi mới nhìn.
+
+\renewcommand{\arraystretch}{1.3}
+\begin{longtable}{>{\raggedright\arraybackslash}p{6.5cm} >{\raggedright\arraybackslash}p{8cm}}
+\rowcolor{labgreenbg}
+\textbf{Mặt trước (hỏi)} & \textbf{Mặt sau (đáp)} \\
+\hline
+\endhead
+Xem toàn bộ file ngắn & \cmd{cat file} \\
+Cuộn xem file dài; thoát ra & \cmd{less file}; nhấn \cmd{q} (kẹt thì \cmd{Esc} rồi \cmd{q}) \\
+Tìm chữ trong \cmd{less} & \cmd{/tu-khoa} rồi \cmd{Enter}, \cmd{n} để tới tiếp \\
+5 dòng đầu / 5 dòng cuối & \cmd{head -n 5 file} / \cmd{tail -n 5 file} \\
+Theo dõi log đang ghi & \cmd{tail -f file} (thoát: \cmd{Control + C}) \\
+Tạo file rỗng & \cmd{touch file} \\
+Ghi đè nội dung file & \cmd{echo "..." > file} \\
+Nối thêm vào cuối file & \cmd{echo "..." >> file} \\
+Sao chép file & \cmd{cp nguon dich} \\
+Sao chép thư mục & \cmd{cp -R nguon dich} \\
+Hỏi trước khi đè khi copy & \cmd{cp -i ...} \\
+Di chuyển / đổi tên & \cmd{mv nguon dich} \\
+Hỏi trước khi đè khi di chuyển & \cmd{mv -i ...} \\
+Xóa file (KHÔNG vào Thùng rác) & \cmd{rm file} \\
+Xóa có hỏi từng file & \cmd{rm -i file} (chỉ Enter = không xóa) \\
+Xóa thư mục rỗng (an toàn) & \cmd{rmdir thumuc} \\
+Xóa thư mục + nội dung & \cmd{rm -r thumuc} (cẩn thận) \\
+Xóa thư mục NHƯNG hỏi từng mục & \cmd{rm -ri thumuc} \\
+Lệnh phá hủy mạnh, dễ gây thảm họa & \cmd{rm -rf ...} (tránh; không bao giờ \cmd{rm -rf /} hay \cmd{rm -rf \textasciitilde{}}) \\
+Thói quen vàng trước khi xóa thường & \cmd{ls} trước, \cmd{rm} sau \\
+Thói quen vàng trước \cmd{rm -r} / \cmd{*} & \cmd{pwd} (ở đâu?) $\rightarrow$ \cmd{ls} (xóa gì?) $\rightarrow$ rồi mới \cmd{rm} \\
+\cmd{*} nghĩa là gì & ``khớp bất kỳ chuỗi ký tự'' (vd \cmd{*.txt}); \textbf{không} khớp file ẩn \\
+\end{longtable}
+
+%% =========================================================
+\section{TÓM TẮT 1 TRANG}
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{XEM:} \cmd{cat} (file ngắn) \textperiodcentered{} \cmd{less} (file dài, \cmd{/} tìm, \cmd{q} thoát, kẹt thì \cmd{Esc} rồi \cmd{q}) \textperiodcentered{} \cmd{head -n N} (đầu) \textperiodcentered{} \cmd{tail -n N} (cuối) \textperiodcentered{} \cmd{tail -f} (theo dõi log, thoát \cmd{Control+C}).
+\item \textbf{TẠO:} \cmd{touch f} (file rỗng / cập nhật giờ) \textperiodcentered{} \cmd{echo "x" > f} (\textbf{ghi đè}) \textperiodcentered{} \cmd{echo "x" >> f} (\textbf{nối thêm}). Nhớ: \cmd{>} xóa nội dung cũ, \cmd{>>} giữ lại.
+\item \textbf{SAO CHÉP:} \cmd{cp nguon dich} \textperiodcentered{} thư mục: \cmd{cp -R nguon dich} \textperiodcentered{} hỏi trước khi đè: \cmd{cp -i} \textperiodcentered{} backup giữ thuộc tính: \cmd{cp -a}.
+\item \textbf{DI CHUYỂN/ĐỔI TÊN:} \cmd{mv nguon dich} (đè \textbf{im lặng} nếu không có \cmd{-i}) \textperiodcentered{} an toàn: \cmd{mv -i}.
+\item \textbf{XÓA:} \cmd{rm f} (\textbf{không} vào Thùng rác, \textbf{không} hoàn tác) \textperiodcentered{} \cmd{rm -i} (hỏi; chỉ Enter = không xóa) \textperiodcentered{} \cmd{rmdir} (chỉ thư mục \textbf{rỗng}) \textperiodcentered{} \cmd{rm -r} (thư mục + nội dung) \textperiodcentered{} \cmd{rm -ri} (đệ quy nhưng hỏi từng mục). \textbf{\cmd{rm -rf} cực nguy hiểm}; KHÔNG BAO GIỜ \cmd{rm -rf /} hay \cmd{rm -rf \textasciitilde{}}.
+\item \textbf{WILDCARD \cmd{*}:} \cmd{ls *.txt} xem trước; \cmd{rm *.txt} xóa hàng loạt; \cmd{*} \textbf{không} khớp file ẩn $\rightarrow$ \textbf{luôn \cmd{pwd} + \cmd{ls} trước khi \cmd{rm}}.
+\item \textbf{THÓI QUEN AN TOÀN:} chỉ tập trong \cmd{\textasciitilde/linux-lab}; \cmd{pwd} để biết mình \textbf{ở đâu} + \cmd{ls} để biết mình \textbf{sắp xóa gì}; \cmd{-i} khi \cmd{cp}/\cmd{mv}/\cmd{rm} (và \cmd{-ri} cho thư mục); gõ chậm khi có \cmd{rm}, \cmd{-rf}, \cmd{*}; backup trước thao tác phá hủy; alias \cmd{rm='rm -i'} là lưới phụ, không thay được thói quen.
+\end{itemize}
+
+%% =========================================================
+\section{BÀI TẬP MỞ RỘNG (stretch) --- CÓ đáp án}
+
+Làm trong sân tập sạch. Dựng lại trước:
+\begin{Verbatim}
+mkdir -p ~/linux-lab/ch3-stretch
+cd ~/linux-lab/ch3-stretch
+pwd
+\end{Verbatim}
+
+\textbf{Bài S1.} Tạo file \cmd{nhatky.txt} gồm đúng 3 dòng: \cmd{Sáng}, \cmd{Trưa}, \cmd{Tối} --- chỉ dùng \cmd{echo} với \cmd{>} và \cmd{>>}. Sau đó in toàn bộ ra.
+
+\textbf{Bài S2.} Tạo 4 file: \cmd{note1.txt}, \cmd{note2.txt}, \cmd{note3.txt}, \cmd{anh.png}. Dùng \textbf{một} lệnh \cmd{ls} (có \cmd{*}) để chỉ liệt kê các file \cmd{.txt}. Rồi dùng \textbf{một} lệnh để xóa \textbf{chỉ} các file \cmd{.txt}, nhưng \textbf{xem trước bằng \cmd{pwd} và \cmd{ls}}.
+
+\textbf{Bài S3.} Tạo thư mục \cmd{du-an} chứa file \cmd{readme.txt}. Thử xóa \cmd{du-an} bằng \cmd{rmdir} và quan sát. Rồi xóa thành công bằng cách đúng.
+
+\textbf{Bài S4.} Tạo \cmd{goc.txt} chứa dòng \cmd{bản gốc}. Sao chép thành \cmd{sao.txt}. Dùng \cmd{cp -i} để thử ghi đè \cmd{sao.txt} bằng \cmd{goc.txt} --- nhưng \textbf{từ chối} ghi đè.
+
+\textbf{Bài S5 (tư duy + thực hành an toàn).} Bạn muốn dọn sạch thư mục tập \cmd{ch3-stretch} để bắt đầu lại. Hãy làm theo cách \textbf{an toàn nhất, tường minh nhất}: xóa cả thư mục bằng \textbf{đường dẫn đầy đủ} rồi tạo lại --- \textbf{không dùng \cmd{*}}. Giải thích vì sao cách này an toàn hơn việc gõ một lệnh có dấu \cmd{*}.
+
+\subsection*{ĐÁP ÁN / KẾT QUẢ MONG ĐỢI --- Bài tập mở rộng}
+\addcontentsline{toc}{subsection}{Đáp án --- Bài tập mở rộng}
+
+\textbf{S1.}
+\begin{Verbatim}
+echo "Sang" > nhatky.txt
+echo "Trua" >> nhatky.txt
+echo "Toi" >> nhatky.txt
+cat nhatky.txt
+\end{Verbatim}
+Kết quả:
+\begin{Verbatim}
+Sáng
+Trưa
+Tối
+\end{Verbatim}
+\textit{Lưu ý:} chỉ dòng đầu dùng \cmd{>} (tạo mới/ghi đè), hai dòng sau \textbf{phải} \cmd{>>} để không xóa dòng trước.
+
+\textbf{S2.}
+\begin{Verbatim}
+touch note1.txt note2.txt note3.txt anh.png
+ls *.txt
+\end{Verbatim}
+Kết quả \cmd{ls *.txt}:
+\begin{Verbatim}
+note1.txt   note2.txt   note3.txt
+\end{Verbatim}
+Xem trước (cả vị trí lẫn nội dung) rồi mới xóa:
+\begin{Verbatim}
+pwd
+ls *.txt
+rm *.txt
+ls
+\end{Verbatim}
+Sau cùng \cmd{ls} chỉ còn \cmd{anh.png} (vì \cmd{.png} không khớp \cmd{*.txt}).
+
+\textbf{S3.}
+\begin{Verbatim}
+mkdir du-an
+touch du-an/readme.txt
+rmdir du-an
+\end{Verbatim}
+\cmd{rmdir} báo lỗi (đây là điều đúng --- nó bảo vệ bạn):
+\begin{Verbatim}
+rmdir: du-an: Directory not empty
+\end{Verbatim}
+Xóa đúng cách (đã nhìn trước):
+\begin{Verbatim}
+ls du-an
+rm -r du-an
+ls
+\end{Verbatim}
+\cmd{du-an} biến mất. \textit{(Nếu muốn thận trọng hơn nữa, có thể dùng \cmd{rm -ri du-an} để được hỏi xác nhận từng mục.)}
+
+\textbf{S4.}
+\begin{Verbatim}
+echo "ban goc" > goc.txt
+cp goc.txt sao.txt
+cp -i goc.txt sao.txt
+\end{Verbatim}
+Khi hiện \cmd{overwrite sao.txt? (y/n [n])} $\rightarrow$ gõ \cmd{n} rồi \cmd{Enter}. \cmd{sao.txt} giữ nguyên (không bị đè). Kiểm chứng \cmd{cat sao.txt} vẫn ra \cmd{bản gốc}.
+
+\textbf{S5.}
+\begin{Verbatim}
+cd ~
+pwd
+rm -r ~/linux-lab/ch3-stretch
+mkdir ~/linux-lab/ch3-stretch
+ls ~/linux-lab
+\end{Verbatim}
+Giải thích: cách này xóa \textbf{chính thư mục \cmd{ch3-stretch}} bằng \textbf{đường dẫn tuyệt đối, tường minh} (\cmd{\textasciitilde/linux-lab/ch3-stretch}) rồi tạo lại thư mục rỗng --- kết quả y hệt ``dọn sạch nội dung'' nhưng \textbf{an toàn hơn nhiều} so với lệnh có dấu \cmd{*}. Vì sao?
+
+\begin{itemize}[leftmargin=1.4em]
+\item Đường dẫn ghi rõ ràng, \textbf{không phụ thuộc vào việc bạn đang đứng ở đâu} --- nên dù bạn quên \cmd{cd}, lệnh vẫn nhắm đúng chỗ. (Lệnh kiểu \cmd{rm -r ./*} thì ngược lại: nó phụ thuộc hoàn toàn vào thư mục hiện tại, nên nếu bạn lỡ đứng ở Home hay một thư mục thật, nó sẽ quét sạch nội dung chỗ đó.)
+\item Trước khi xóa, ta \cmd{cd \textasciitilde{}} rồi \cmd{pwd} để \textbf{xác nhận mình không đứng bên trong} thư mục sắp xóa và biết rõ vị trí.
+\item Không có \cmd{*} $\rightarrow$ không có rủi ro ``mở rộng ngoài ý muốn'' hay ``dấu cách thừa''.
+\end{itemize}
+
+\textit{(Lưu ý cho người mới: hãy tránh thói quen gõ \cmd{rm -r ./*} --- nó là đúng cái combo \cmd{*} + \cmd{-r} mà cả chương này khuyên cảnh giác. Khi cần ``làm lại từ đầu'', cách ``xóa cả thư mục bằng đường dẫn đầy đủ rồi \cmd{mkdir} lại'' vừa đơn giản vừa khó sai hơn.)}
+
+\subsection*{ĐÁP ÁN --- phần ``Tự kiểm tra'' trong bài}
+\addcontentsline{toc}{subsection}{Đáp án --- Tự kiểm tra}
+
+\textbf{Tự kiểm tra 1.} In 2 dòng cuối: \cmd{tail -n 2 tho.txt}. Thoát \cmd{less}: nhấn phím \cmd{q} (nếu màn hình trông lạ, nhấn \cmd{Esc} rồi \cmd{q}).
+
+\textbf{Tự kiểm tra 2.} Dùng \cmd{echo "dong moi" >> cauhinh.txt} (hai dấu \cmd{>>}, \textbf{nối thêm}). Nếu dùng một dấu \cmd{>} sẽ \textbf{ghi đè}, xóa sạch 100 dòng cũ --- mất dữ liệu.
+
+\textbf{Tự kiểm tra 3.} Vì \cmd{cp} thường \textbf{ghi đè im lặng} file đích đã tồn tại; còn \cmd{cp -i} \textbf{dừng lại hỏi} \cmd{overwrite ...?}, cho bạn cơ hội gõ \cmd{n} để hủy trước khi mất file đích cũ.
+
+\textbf{Tự kiểm tra 4.} Nội dung cũ của \cmd{b.txt} bị \textbf{ghi đè và mất hoàn toàn}, không hỏi, không hoàn tác. (Đó là lý do nên dùng \cmd{mv -i}.)
+
+\textbf{Tự kiểm tra 5.} \cmd{tam} còn file bên trong nên \cmd{rmdir} sẽ báo lỗi ``Directory not empty''; phải dùng \cmd{rm -r tam} (hoặc thận trọng hơn: \cmd{rm -ri tam}). Nên gõ \cmd{pwd} (chắc chắn đang ở đúng thư mục) \textbf{và} \cmd{ls tam} (nhìn rõ sắp xóa gì) \textbf{trước} khi xóa.
+
+\textbf{Tự kiểm tra 6.} Vì \cmd{rm *.txt} tác động lên \textbf{nhiều file cùng lúc} và \textbf{không hoàn tác}. Chạy \cmd{ls *.txt} với \textbf{cùng mẫu} cho bạn thấy \textbf{chính xác} danh sách sẽ bị xóa; còn \cmd{pwd} đảm bảo bạn không \textbf{đứng nhầm thư mục} --- vì nếu đứng nhầm chỗ, danh sách \cmd{ls} vẫn trông ``hợp lý'' nhưng bạn lại xóa nhầm dữ liệu thật.
+
+%% =========================================================
+\section{KẾ HOẠCH ÔN NGẮT QUÃNG (spaced repetition)}
+
+Trí nhớ bền đến từ ôn đúng nhịp, không phải học dồn một lần.
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Sau 1 ngày:} Không nhìn sách, mở Terminal, tạo \cmd{\textasciitilde/linux-lab/ch3-on1}, rồi tự làm lại \textbf{Lab Chính bước 2$\rightarrow$7} từ trí nhớ. Đặc biệt đọc to khác biệt \cmd{>} vs \cmd{>>}. Kẹt chỗ nào, đánh dấu chỗ đó.
+\item \textbf{Sau 3 ngày:} Làm lại \textbf{Bài tập mở rộng S1$\rightarrow$S4} không nhìn đáp án. Tự đặt và trả lời: ``\cmd{rm} có vào Thùng rác không? \cmd{rmdir} xóa được thư mục có file không? \cmd{cp} thư mục cần cờ gì? Trước \cmd{rm -r} cần gõ gì để biết mình \textbf{ở đâu}?''
+\item \textbf{Sau 1 tuần:} Lấy bộ \textbf{Thẻ ghi nhớ} (Mục 9), che cột phải, đọc lướt toàn bộ trong 5 phút. Sau đó nhắm mắt đọc to \textbf{3 thói quen an toàn} quan trọng nhất: \textit{(1) \cmd{pwd} + \cmd{ls} trước \cmd{rm -r}/\cmd{*}; (2) dùng \cmd{-i} (hoặc \cmd{-ri}) khi cp/mv/rm; (3) không bao giờ \cmd{rm -rf /} hay \cmd{rm -rf \textasciitilde{}}.} Cuối cùng dọn sạch các thư mục ôn tập \textbf{theo đúng thói quen an toàn} (xác nhận vị trí trước, dùng đường dẫn tường minh):
+\end{itemize}
+
+\begin{Verbatim}
+cd ~
+pwd
+ls ~/linux-lab
+rm -r ~/linux-lab/ch3-on1
+\end{Verbatim}
+
+\begin{seniorbox}[title={Lời nhắn cuối chương}]
+Bạn vừa học những lệnh quyền năng nhất --- và cũng nguy hiểm nhất --- của dòng lệnh. Điều phân biệt người mới với Senior \textbf{không phải} là gõ nhanh hơn, mà là \textbf{gõ cẩn thận hơn}: luôn biết mình đang ở đâu (\cmd{pwd}), luôn nhìn trước khi xóa (\cmd{ls}), và luôn tự hỏi ``nếu sai thì mình mất gì?''. Giữ vững những thói quen này, bạn đã bước một chân vào tư duy của dân chuyên nghiệp. Hẹn gặp ở Chương 4.
+\end{seniorbox}
+
+\end{document}
