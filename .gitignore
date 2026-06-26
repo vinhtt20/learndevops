@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# LaTeX build artifacts (giữ lại file .pdf cuối, bỏ file phụ)
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.xdv
+*.synctex.gz
+
+# Editor
+.vscode/
+.idea/
+
+# Secrets (phòng xa)
+.env
+*.key
+*.pem
+*.tfstate
+*.tfstate.*
