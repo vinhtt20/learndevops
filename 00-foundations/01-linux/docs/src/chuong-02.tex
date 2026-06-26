@@ -1,0 +1,1053 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+% ===== Fonts (Latin Modern via .otf file names) =====
+\setmainfont{lmroman10-regular.otf}[
+  BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf,
+  BoldItalicFont=lmroman10-bolditalic.otf]
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmono10-italic.otf]
+
+% ===== Languages =====
+\setdefaultlanguage{vietnamese}
+\setotherlanguage{english}
+
+% ===== Hyperref setup =====
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black!70!blue,
+  urlcolor=blue,
+  pdftitle={Chuong 2 - He thong file va di chuyen},
+  pdfauthor={DevOps Foundations}
+}
+
+% ===== Colors =====
+\definecolor{labcolor}{RGB}{0,120,80}
+\definecolor{labback}{RGB}{232,248,240}
+\definecolor{seniorcolor}{RGB}{150,60,0}
+\definecolor{seniorback}{RGB}{252,242,228}
+\definecolor{checkcolor}{RGB}{30,80,160}
+\definecolor{checkback}{RGB}{232,240,252}
+\definecolor{notecolor}{RGB}{90,90,90}
+\definecolor{noteback}{RGB}{244,244,244}
+\definecolor{warncolor}{RGB}{170,20,20}
+\definecolor{warnback}{RGB}{252,235,235}
+\definecolor{flashcolor}{RGB}{80,30,120}
+\definecolor{flashback}{RGB}{244,238,250}
+\definecolor{codeback}{RGB}{245,245,245}
+
+% ===== Title formatting =====
+\titleformat{\section}
+  {\Large\bfseries\color{checkcolor}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{seniorcolor}}{\thesubsection}{0.6em}{}
+
+% ===== Header / Footer =====
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Chương 2 — Hệ thống file \& di chuyển}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ===== tcolorbox styles =====
+\newtcolorbox{labbox}[1][]{
+  colback=labback, colframe=labcolor, coltitle=white,
+  fonttitle=\bfseries, title={Thực hành ngay}, breakable,
+  boxrule=0.8pt, arc=2pt, #1}
+\newtcolorbox{seniorbox}[1][]{
+  colback=seniorback, colframe=seniorcolor, coltitle=white,
+  fonttitle=\bfseries, title={Góc Senior}, breakable,
+  boxrule=0.8pt, arc=2pt, #1}
+\newtcolorbox{checkbox}[1][]{
+  colback=checkback, colframe=checkcolor, coltitle=white,
+  fonttitle=\bfseries, title={Tự kiểm tra}, breakable,
+  boxrule=0.8pt, arc=2pt, #1}
+\newtcolorbox{notebox}[1][]{
+  colback=noteback, colframe=notecolor, coltitle=white,
+  fonttitle=\bfseries, title={Ghi chú}, breakable,
+  boxrule=0.8pt, arc=2pt, #1}
+\newtcolorbox{tipbox}[1][]{
+  colback=labback, colframe=labcolor, coltitle=white,
+  fonttitle=\bfseries, title={Mẹo}, breakable,
+  boxrule=0.8pt, arc=2pt, #1}
+\newtcolorbox{warnbox}[1][]{
+  colback=warnback, colframe=warncolor, coltitle=white,
+  fonttitle=\bfseries, title={Cảnh báo}, breakable,
+  boxrule=0.8pt, arc=2pt, #1}
+
+% ===== Code block environment =====
+\newtcolorbox{codebox}{
+  colback=codeback, colframe=black!40, boxrule=0.5pt,
+  arc=1pt, left=4pt, right=4pt, top=3pt, bottom=3pt, breakable}
+
+\newcommand{\hm}{\textasciitilde{}}
+
+\begin{document}
+
+% ===== Title page =====
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{checkcolor} CHƯƠNG 2\par}
+\vspace{1cm}
+{\LARGE\bfseries Hệ thống file \& di chuyển\par}
+\vspace{0.5cm}
+{\Large làm chủ \texttt{cd}, \texttt{pwd}, \texttt{ls}\par}
+\vspace{2cm}
+{\large\itshape ``Trước khi học làm chủ một thành phố, bạn phải biết mình đang đứng ở góc phố nào, đường nào dẫn về nhà, và bản đồ tổng thể trông ra sao.''\par}
+\vfill
+{\large DevOps Foundations — Lộ trình từ con số 0\par}
+\vspace{1cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================
+\noindent
+Ở Chương 1, bạn đã biết Linux là gì, đã mở \textbf{Terminal} trên máy Mac và gõ vài lệnh đầu tiên như \texttt{uname}, \texttt{pwd}, \texttt{ls}. Bạn đã chạm tay vào ``cánh cửa''. Chương này, chúng ta bước hẳn vào trong và học cách \textbf{đi lại} trong ngôi nhà đó mà không bị lạc.
+
+\vspace{0.4em}
+Đừng lo nếu bạn chưa biết gì về máy tính. Mọi thuật ngữ sẽ được giải thích ngay khi xuất hiện. Bạn chỉ cần một thứ: \textbf{mở Terminal lên và gõ theo từng dòng.} Học bằng tay, không học bằng mắt.
+
+% =====================================================
+\section{Mục tiêu học tập}
+
+Học xong chương này, bạn sẽ có thể:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Hiểu} ``cây thư mục'' (filesystem tree) là gì, và vẽ lại nó trong đầu như một cái tủ hồ sơ.
+  \item \textbf{Trả lời} được câu hỏi ``tôi đang đứng ở đâu?'' bằng lệnh \texttt{pwd}.
+  \item \textbf{Liệt kê} nội dung một thư mục với \texttt{ls}, và biết dùng các biến thể \texttt{ls -l}, \texttt{ls -a}, \texttt{ls -la}.
+  \item \textbf{Di chuyển} giữa các thư mục bằng \texttt{cd}: về nhà, lên thư mục cha, về chỗ cũ, về gốc.
+  \item \textbf{Phân biệt} đường dẫn tuyệt đối và đường dẫn tương đối --- và biết khi nào dùng cái nào.
+  \item \textbf{Nhận diện} các thư mục quan trọng của hệ Unix/Linux (\texttt{/}, \texttt{/etc}, \texttt{/var}, \texttt{/tmp}, \texttt{/usr}, \texttt{/bin}\ldots).
+  \item \textbf{Có phản xạ} dùng phím Tab để gõ nhanh và tránh sai chính tả.
+  \item \textbf{Bắt đầu suy nghĩ như một Senior}: vì sao đường dẫn tuyệt đối lại quan trọng sống còn trong automation.
+\end{enumerate}
+
+\noindent Thời gian dự kiến: \textbf{45--60 phút} thực hành thật sự (không phải chỉ đọc).
+
+% =====================================================
+\section{Cây thư mục là gì?}
+
+\subsection{Ví von dễ hiểu nhất: cái tủ hồ sơ}
+
+Hãy tưởng tượng một \textbf{tủ hồ sơ} khổng lồ trong văn phòng:
+
+\begin{itemize}[leftmargin=*]
+  \item Cái \textbf{tủ} lớn nhất, bao trùm tất cả $\rightarrow$ gọi là \textbf{thư mục gốc (root)}.
+  \item Trong tủ có nhiều \textbf{ngăn kéo} $\rightarrow$ mỗi ngăn là một \textbf{thư mục (directory)}.
+  \item Trong mỗi ngăn kéo lại có \textbf{cặp tài liệu nhỏ hơn} $\rightarrow$ các thư mục con, lồng nhau.
+  \item Trong cùng là \textbf{tờ giấy} thật sự chứa thông tin $\rightarrow$ đó là \textbf{file (tệp)}.
+\end{itemize}
+
+\begin{notebox}[title={Thuật ngữ}]
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Thư mục (directory)}: một ``ngăn chứa'' có thể đựng các file và các thư mục khác. Trên giao diện đồ họa (như Finder của Mac), nó hiện ra dưới dạng cái \textbf{folder} (thư mục) màu xanh. \textbf{``Thư mục'' và ``folder'' là MỘT THỨ}, chỉ khác cách gọi (sẽ nói kỹ ở phần hiểu lầm).
+  \item \textbf{File (tệp)}: một mẩu dữ liệu cụ thể --- một bức ảnh, một bài hát, một văn bản. Đây là ``lá'' của cây.
+\end{itemize}
+\end{notebox}
+
+\subsection{Vì sao gọi là ``cây''?}
+
+Vì nếu vẽ ra, nó trông giống một cái cây lộn ngược (hoặc một cây gia phả):
+
+\begin{codebox}
+\begin{verbatim}
+                          /        <- GOC (root) - thu muc cao nhat
+                          |
+        +-------------+---+---+--------------+
+       Users         etc     var            usr   ... (rut gon - goc that co
+        |                                           nhieu thu muc hon)
+      vinh           <- thu muc NHA cua ban (home)
+        |
+   +----+-----+----------+
+ Desktop   Documents   Downloads
+   |
+ baocao.txt   <- FILE (day la "la", khong chua gi ben trong nua)
+\end{verbatim}
+\end{codebox}
+
+Mọi thứ trên máy đều mọc ra từ \textbf{một gốc duy nhất}: dấu gạch chéo \texttt{/}. Không có gì nằm ngoài \texttt{/}. Đây là điểm khác biệt rất lớn so với Windows (nơi có ổ \texttt{C:}, ổ \texttt{D:} riêng biệt). Trong thế giới Unix/Linux/macOS, \textbf{chỉ có một cái cây duy nhất}, một gốc duy nhất.
+
+\begin{notebox}[title={Lưu ý cách đọc dấu \texttt{/}}]
+Ký tự \texttt{/} đọc là \textbf{``slash''}. Khi nó đứng \textbf{MỘT MÌNH ở đầu} một đường dẫn, nó chỉ \textbf{thư mục gốc (root)}. Khi nó nằm \textbf{GIỮA} các tên (như trong \texttt{/Users/vinh}), nó chỉ là \textbf{dấu ngăn cách} giữa các tầng --- không phải ``gốc''. Đừng nhầm: chỉ cái \texttt{/} đầu tiên, đứng đơn độc, mới mang nghĩa ``gốc''.
+\end{notebox}
+
+Sơ đồ trên đã \textbf{rút gọn} cho dễ nhìn. Trên thực tế, khi gõ \texttt{ls /} bạn sẽ thấy hàng chục mục chứ không chỉ bốn nhánh --- điều đó hoàn toàn bình thường.
+
+\subsection{Ba khái niệm ``vị trí'' bạn phải thuộc}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.2cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{2.6cm}}
+\rowcolor{checkback}
+\textbf{Khái niệm} & \textbf{Ý nghĩa} & \textbf{Ký hiệu tắt} \\
+\hline
+\endhead
+Thư mục hiện tại (current / working directory) & Nơi bạn ``đang đứng'' lúc này trong cái cây & \texttt{.} (một dấu chấm) \\
+Thư mục cha (parent directory) & Thư mục chứa thư mục hiện tại (cao hơn một bậc) & \texttt{..} (hai dấu chấm) \\
+Thư mục nhà (home directory) & ``Phòng riêng'' của bạn --- nơi mặc định chứa đồ của bạn & \texttt{\hm} (dấu ngã) \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+\begin{notebox}[title={Quan trọng --- khác biệt macOS vs Linux}]
+\begin{itemize}[leftmargin=*]
+  \item Trên \textbf{macOS}, thư mục nhà của bạn nằm ở \textbf{\texttt{/Users/<tên-bạn>}}. Ví dụ \texttt{/Users/vinh}.
+  \item Trên \textbf{Linux}, thư mục nhà thường nằm ở \textbf{\texttt{/home/<tên-bạn>}}. Ví dụ \texttt{/home/vinh}.
+  \item Trên macOS \textbf{vẫn có} thư mục \texttt{/home}, nhưng nó thường \textbf{rỗng} (là một điểm gắn tự động --- automount), \textbf{không} chứa nhà người dùng như trên Linux. Nếu bạn gõ \texttt{ls /home} trên Mac mà không thấy gì, đừng lo --- hoàn toàn bình thường.
+  \item Dấu \textbf{\texttt{\hm}} là cách viết tắt cho thư mục nhà, \textbf{bất kể} bạn đang ở hệ nào. Cứ gõ \texttt{\hm} là máy tự hiểu đúng nhà của bạn. Đây là một mẹo rất tiện.
+\end{itemize}
+\end{notebox}
+
+\begin{checkbox}[title={Tự kiểm tra 1}]
+Trên máy Mac, đường dẫn đầy đủ tới thư mục nhà của một người tên \texttt{lan} sẽ là gì? Còn trên Linux thì sao? \textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+% =====================================================
+\section{\texttt{pwd} --- ``Tôi đang đứng ở đâu?''}
+
+\texttt{pwd} là viết tắt của \textbf{p}rint \textbf{w}orking \textbf{d}irectory --- ``in ra thư mục đang làm việc''. Đây là lệnh đầu tiên bạn nên gõ mỗi khi thấy hoang mang không biết mình ở đâu.
+
+\begin{labbox}
+Mở Terminal (nhấn \texttt{Cmd + Space}, gõ ``Terminal'', Enter). Gõ:
+\begin{codebox}
+\begin{verbatim}
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi} (giả sử tên đăng nhập Mac của bạn là \texttt{vinh}):
+\begin{codebox}
+\begin{verbatim}
+/Users/vinh
+\end{verbatim}
+\end{codebox}
+\end{labbox}
+
+\begin{notebox}[title={Trấn an}]
+Máy bạn sẽ hiển thị tên của \textbf{chính bạn}, không phải \texttt{vinh}. Nếu bạn thấy \texttt{/Users/lan} hay \texttt{/Users/john}, hoàn toàn bình thường --- đó chính là tên tài khoản Mac của bạn. Khi vừa mở Terminal, bạn gần như luôn bắt đầu ở thư mục nhà.
+\end{notebox}
+
+Lệnh \texttt{pwd} không bao giờ thay đổi gì cả --- nó chỉ \textbf{báo cáo vị trí}. Hoàn toàn an toàn, gõ bao nhiêu lần cũng được.
+
+\begin{checkbox}[title={Tự kiểm tra 2}]
+\texttt{pwd} là viết tắt của ba chữ gì? Lệnh này có làm thay đổi vị trí của bạn không?
+\end{checkbox}
+
+% =====================================================
+\section{\texttt{ls} --- Liệt kê nội dung}
+
+\texttt{ls} viết tắt của \textbf{l}i\textbf{s}t (liệt kê). Nó cho bạn thấy ``trong ngăn kéo này có những gì''.
+
+\subsection{\texttt{ls} cơ bản}
+
+\begin{codebox}
+\begin{verbatim}
+ls
+\end{verbatim}
+\end{codebox}
+
+\textbf{Kết quả mong đợi} (ví dụ --- máy bạn chắc chắn khác):
+
+\begin{codebox}
+\begin{verbatim}
+Applications    Desktop     Documents   Downloads
+Library         Movies      Music       Pictures
+Public
+\end{verbatim}
+\end{codebox}
+
+\begin{notebox}[title={Trấn an}]
+Danh sách trên máy bạn sẽ khác hoàn toàn, tùy bạn đã lưu gì. Có thể nhiều hơn, có thể ít hơn. Không sao cả. Ngoài ra, \textbf{số cột và cách sắp xếp} trên màn hình bạn có thể khác (tùy độ rộng cửa sổ Terminal): có khi xếp thành nhiều cột, có khi mỗi mục một dòng --- \textbf{cả hai đều đúng}. Đừng cố canh từng cột cho khớp với sách; chỉ cần để ý \textbf{các tên} xuất hiện.
+\end{notebox}
+
+\subsection{\texttt{ls -l} --- xem chi tiết (dạng danh sách dọc)}
+
+Chữ \texttt{-l} là một \textbf{tùy chọn} (option / flag) --- một ``công tắc'' bật thêm tính năng. \texttt{-l} nghĩa là \textbf{l}ong (dài/chi tiết).
+
+\begin{codebox}
+\begin{verbatim}
+ls -l
+\end{verbatim}
+\end{codebox}
+
+\textbf{Kết quả mong đợi} (rút gọn):
+
+\begin{codebox}
+\begin{verbatim}
+total 0
+drwx------@  5 vinh  staff   160 Jun 20 09:14 Desktop
+drwx------+  4 vinh  staff   128 Jun 18 22:01 Documents
+drwx------+ 12 vinh  staff   384 Jun 25 14:33 Downloads
+\end{verbatim}
+\end{codebox}
+
+Mỗi dòng có nhiều cột. Bạn \textbf{chưa cần thuộc lòng} ngay bây giờ, chỉ cần làm quen sơ lược:
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{7.6cm}}
+\rowcolor{checkback}
+\textbf{Cột (ví dụ)} & \textbf{Tên} & \textbf{Ý nghĩa sơ lược} \\
+\hline
+\endhead
+\texttt{drwx------@} & Quyền (permissions) & \texttt{d} đầu dòng = \textbf{d}irectory (thư mục). Phần \texttt{rwx} là quyền đọc/ghi/chạy. \textit{(Học sâu ở chương về quyền.)} \\
+\texttt{5} & Số liên kết (link count) & Một con số kỹ thuật; với thư mục, nó liên quan tới số thư mục con. \textbf{Bạn chưa cần hiểu} --- sẽ học ở chương về liên kết/quyền. \\
+\texttt{vinh} & Chủ sở hữu (owner) & Ai là chủ của mục này. \\
+\texttt{staff} & Nhóm (group) & Nhóm người dùng sở hữu. \\
+\texttt{160} & Kích thước (size) & Tính bằng byte. \\
+\texttt{Jun 20 09:14} & Ngày sửa cuối & Lần chỉnh sửa gần nhất. \\
+\texttt{Desktop} & Tên & Tên thư mục/file. \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+\begin{notebox}
+Đừng hoảng vì cột quyền \texttt{drwx------@}. Hiện tại chỉ cần nhớ: \textbf{chữ \texttt{d} ở đầu nghĩa là ``đây là thư mục''}. Nếu là \texttt{-} (gạch ngang) ở đầu thì đó là một \textbf{file} thường.
+\end{notebox}
+
+\subsection{\texttt{ls -a} --- hiện cả file ẩn (dotfiles)}
+
+\texttt{-a} nghĩa là \textbf{a}ll (tất cả). Mặc định, \texttt{ls} \textbf{giấu} những file/thư mục có tên bắt đầu bằng dấu chấm \texttt{.} --- gọi là \textbf{dotfile (file ẩn)}.
+
+\begin{notebox}[title={Thuật ngữ --- dotfile}]
+Một file/thư mục mà tên bắt đầu bằng dấu chấm, ví dụ \texttt{.zshrc}, \texttt{.gitconfig}. Quy ước Unix coi đây là file \textbf{cấu hình/hệ thống}, người dùng thường không cần nhìn thấy hằng ngày, nên \texttt{ls} giấu chúng đi cho gọn. Chúng \textbf{không phải bị hỏng hay nguy hiểm} --- chỉ là ``ẩn''.
+\end{notebox}
+
+\begin{codebox}
+\begin{verbatim}
+ls -a
+\end{verbatim}
+\end{codebox}
+
+\textbf{Kết quả mong đợi} (rút gọn):
+
+\begin{codebox}
+\begin{verbatim}
+.               .zsh_history    Desktop     Music
+..              .zshrc          Documents   Pictures
+.CFUserTextEncoding             Downloads   Public
+.config         Library
+\end{verbatim}
+\end{codebox}
+
+\begin{notebox}[title={Trấn an}]
+Lại nhắc --- số cột và cách dàn cột trên máy bạn có thể khác (đặc biệt vì có tên rất dài như \texttt{.CFUserTextEncoding}). Đừng cố canh từng cột; chỉ để ý các tên.
+\end{notebox}
+
+Để ý hai mục đặc biệt \textbf{luôn xuất hiện} với \texttt{ls -a}:
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{.} (một chấm) = \textbf{chính thư mục hiện tại}.
+  \item \texttt{..} (hai chấm) = \textbf{thư mục cha}.
+\end{itemize}
+
+Hai mục này có mặt trong \textit{mọi} thư mục và là chìa khóa để đi lại bằng đường dẫn tương đối (phần F).
+
+\subsection{\texttt{ls -la} --- kết hợp chi tiết + file ẩn}
+
+Bạn có thể \textbf{gộp} nhiều tùy chọn lại. \texttt{ls -la} = vừa chi tiết (\texttt{-l}) vừa hiện hết (\texttt{-a}):
+
+\begin{codebox}
+\begin{verbatim}
+ls -la
+\end{verbatim}
+\end{codebox}
+
+\texttt{ls -la} và \texttt{ls -al} cho kết quả \textbf{giống hệt nhau} --- thứ tự các chữ cái không quan trọng. Đây là lệnh nhiều DevOps gõ theo phản xạ hằng ngày.
+
+\subsection{\texttt{ls <đường\_dẫn>} --- xem nội dung MỘT NƠI KHÁC mà không cần đi tới}
+
+Bạn không cần \texttt{cd} vào một thư mục mới chỉ để liếc xem nó có gì. Đưa thẳng đường dẫn cho \texttt{ls}:
+
+\begin{codebox}
+\begin{verbatim}
+ls /Users
+\end{verbatim}
+\end{codebox}
+
+\textbf{Kết quả mong đợi} (ví dụ):
+
+\begin{codebox}
+\begin{verbatim}
+Shared  vinh
+\end{verbatim}
+\end{codebox}
+
+Hoặc xem thư mục \texttt{/etc} (chứa cấu hình hệ thống):
+
+\begin{codebox}
+\begin{verbatim}
+ls /etc
+\end{verbatim}
+\end{codebox}
+
+Bạn sẽ thấy nhiều file cấu hình. \textbf{Chỉ xem thôi, đừng sửa gì.}
+
+\begin{notebox}[title={Trấn an}]
+Danh sách trong \texttt{/etc} trên máy bạn sẽ khác và có thể có những tên lạ (ví dụ thư mục do phần mềm bạn đã cài thêm tạo ra) --- hoàn toàn bình thường. Chỉ cần xem, đừng sửa.
+\end{notebox}
+
+\begin{checkbox}[title={Tự kiểm tra 3}]
+Bạn muốn vừa thấy file ẩn vừa thấy thông tin chi tiết của thư mục nhà. Gõ lệnh gì? Còn nếu chỉ muốn liệt kê nội dung của \texttt{/tmp} mà không rời khỏi chỗ đang đứng?
+\end{checkbox}
+
+\begin{seniorbox}[title={Góc Senior \#1 --- BSD \texttt{ls} (macOS) vs GNU \texttt{ls} (Linux)}]
+Có một sự thật ít người mới biết: \texttt{ls} trên Mac \textbf{không hoàn toàn giống} \texttt{ls} trên Linux phổ biến (Ubuntu, CentOS\ldots).
+
+\begin{itemize}[leftmargin=*]
+  \item macOS dùng phiên bản \textbf{BSD} (kế thừa từ dòng Unix của Berkeley).
+  \item Đa số Linux dùng phiên bản \textbf{GNU} (gọi là \textit{coreutils}).
+\end{itemize}
+
+Một hiểu lầm phổ biến là ``cờ bật màu khác nhau''. Hãy nói cho chính xác:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Bật màu:} macOS hiện đại \textbf{hỗ trợ CẢ HAI} cách: \texttt{ls -G} (cách viết tắt cố hữu của BSD) \textbf{lẫn} \texttt{ls -{}-color=auto}. Nghĩa là \texttt{ls -{}-color} \textbf{không} báo lỗi trên Mac đời mới --- bạn cứ gõ thử sẽ thấy nó chạy. (Trên các bản macOS rất cũ thì \texttt{-{}-color} có thể không có; nhưng máy đời nay thì có.)
+  \item \textbf{Cảnh báo cái bẫy THẬT:} cùng cờ \texttt{-G} nhưng \textbf{mang ý nghĩa khác nhau} giữa hai họ! Trên \textbf{BSD/macOS}, \texttt{-G} = \textbf{bật màu}. Trên \textbf{GNU/Linux}, \texttt{-G} lại = \textbf{không in cột nhóm (group)} --- hoàn toàn không liên quan tới màu. Đây mới chính là loại nhầm lẫn khiến script ``chạy đúng kiểu này trên Mac, chạy ra kết quả khác trên Linux''.
+  \item \textbf{Kích thước ``dễ đọc'':} cả hai đều có \texttt{ls -lh} (h = \textbf{h}uman-readable, hiện \texttt{4.0K}, \texttt{12M} thay vì số byte trần) --- cờ này giống nhau.
+  \item Một số cờ dài kiểu \texttt{-{}-option} của GNU (ví dụ \texttt{-{}-time-style}, \texttt{-{}-group-directories-first}, \texttt{-{}-full-time}) \textbf{không tồn tại} trên BSD. Đây là nhóm cờ thực sự dễ làm ``gãy'' script khi chuyển từ Linux sang Mac (hoặc ngược lại).
+\end{itemize}
+
+Vì sao senior quan tâm? Vì bạn viết một script chạy ngon trên máy này, đẩy sang máy kia thì nó \textbf{gãy} hoặc \textbf{chạy ra kết quả khác} vì cờ không tồn tại hoặc mang nghĩa khác. Người mới thường mất hàng giờ debug chuyện này. Mẹo: nếu muốn \texttt{ls} trên Mac giống hệt Linux, có thể cài \texttt{coreutils} (qua Homebrew) để có \texttt{gls}. \textit{(Chưa cần làm bây giờ --- chỉ cần biết ``à, chúng khác nhau, và \texttt{-G} là cái bẫy''.)}
+\end{seniorbox}
+
+% =====================================================
+\section{\texttt{cd} --- Di chuyển giữa các thư mục}
+
+\texttt{cd} viết tắt của \textbf{c}hange \textbf{d}irectory (đổi thư mục). Đây là lệnh ``đi bộ'' của bạn trong cái cây.
+
+\subsection{Năm cách dùng \texttt{cd} cốt lõi}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}p{6.5cm} >{\raggedright\arraybackslash}p{3.4cm}}
+\rowcolor{checkback}
+\textbf{Lệnh} & \textbf{Tác dụng} & \textbf{Ghi nhớ} \\
+\hline
+\endhead
+\texttt{cd \hm} & Về \textbf{thư mục nhà} & \texttt{\hm} = nhà \\
+\texttt{cd ..} & Lên \textbf{thư mục cha} (cao hơn 1 bậc) & \texttt{..} = ``đi lùi lên'' \\
+\texttt{cd -} & Về \textbf{chỗ vừa ở trước đó} & \texttt{-} = ``quay đầu xe'' \\
+\texttt{cd /} & Về \textbf{gốc} (root, cao nhất) & \texttt{/} = gốc \\
+\texttt{cd <đường\_dẫn>} & Đi tới \textbf{một nơi cụ thể} & Bạn chỉ định \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+Và một điều đặc biệt:
+
+\begin{codebox}
+\begin{verbatim}
+cd
+\end{verbatim}
+\end{codebox}
+
+\texttt{cd} \textbf{không kèm gì cả} cũng đưa bạn \textbf{về nhà} --- y hệt \texttt{cd \hm}. Đây là phím tắt rất hay dùng khi bạn bị ``lạc'' và muốn về điểm xuất phát.
+
+\begin{notebox}[title={Lưu ý quan trọng về \texttt{cd -}}]
+Khác với mọi dạng \texttt{cd} khác (vốn ``im lặng'' khi thành công), riêng \texttt{cd -} sẽ \textbf{TỰ IN ra một dòng} cho biết nó vừa đưa bạn tới đâu (ví dụ in ra \texttt{/Users/vinh/linux-lab/tang1/tang2}). Đây là \textbf{hành vi bình thường}, không phải lỗi --- đừng hoảng khi thấy dòng đường dẫn tự hiện ra.
+\end{notebox}
+
+\subsection{Thử ngay}
+
+\begin{labbox}
+\begin{codebox}
+\begin{verbatim}
+cd /
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:}
+\begin{codebox}
+\begin{verbatim}
+/
+\end{verbatim}
+\end{codebox}
+Bạn vừa nhảy lên đỉnh cây. Giờ xem gốc có gì:
+\begin{codebox}
+\begin{verbatim}
+ls
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi} (trên macOS, ví dụ --- máy bạn có thể có nhiều mục hơn):
+\begin{codebox}
+\begin{verbatim}
+Applications    System      Users       bin
+Library         Volumes     etc         usr
+...
+\end{verbatim}
+\end{codebox}
+Giờ về nhà:
+\begin{codebox}
+\begin{verbatim}
+cd
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:}
+\begin{codebox}
+\begin{verbatim}
+/Users/vinh
+\end{verbatim}
+\end{codebox}
+\end{labbox}
+
+\begin{notebox}[title={Trấn an}]
+Lại nhắc --- chỗ \texttt{vinh} sẽ là tên bạn. Và danh sách ở \texttt{/} có thể nhiều mục lạ hoắc; bạn chưa cần hiểu hết. Quan trọng là bạn vừa \textbf{đi lên gốc rồi về nhà} thành công.
+\end{notebox}
+
+\begin{checkbox}[title={Tự kiểm tra 4}]
+Bạn đang ở \texttt{/Users/vinh/Documents}. Gõ \texttt{cd ..} thì bạn tới đâu? Gõ tiếp \texttt{cd -} thì sao?
+\end{checkbox}
+
+% =====================================================
+\section{Đường dẫn: tuyệt đối vs tương đối}
+
+Đây là \textbf{khái niệm quan trọng nhất} của chương. Hiểu chắc phần này, bạn sẽ không bao giờ bị lạc.
+
+\subsection{Định nghĩa}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Đường dẫn tuyệt đối (absolute path):} luôn \textbf{bắt đầu bằng \texttt{/}} (gốc). Nó mô tả đường đi \textbf{từ gốc cây} xuống đích. Giống địa chỉ đầy đủ: \textit{``Số 1, đường Lê Lợi, Quận 1, TP.HCM, Việt Nam''} --- ai đứng ở đâu cũng tìm ra đúng nơi.
+  \begin{itemize}
+    \item Ví dụ: \texttt{/Users/vinh/Documents}
+  \end{itemize}
+  \item \textbf{Đường dẫn tương đối (relative path):} \textbf{không} bắt đầu bằng \texttt{/}. Nó mô tả đường đi \textbf{tính từ chỗ bạn đang đứng}. Giống chỉ đường miệng: \textit{``đi thẳng 200m rồi rẽ phải''} --- chỉ đúng nếu bạn biết người đó \textbf{đang đứng ở đâu}.
+  \begin{itemize}
+    \item Ví dụ: \texttt{Documents} (nghĩa là ``thư mục Documents nằm ngay trong chỗ tôi đang đứng'')
+  \end{itemize}
+\end{itemize}
+
+\subsection{Ba ký hiệu thần kỳ}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{10cm}}
+\rowcolor{checkback}
+\textbf{Ký hiệu} & \textbf{Nghĩa} \\
+\hline
+\endhead
+\texttt{.} & Thư mục \textbf{hiện tại} (``ở đây'') \\
+\texttt{..} & Thư mục \textbf{cha} (lùi lên một bậc) \\
+\texttt{\hm} & Thư mục \textbf{nhà} \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+\subsection{Ví dụ SONG SONG: hai cách, cùng một đích}
+
+Giả sử bạn đang đứng ở thư mục nhà \texttt{/Users/vinh}, và muốn vào \texttt{/Users/vinh/Documents}.
+
+\textbf{Cách tuyệt đối} (đi từ gốc, đứng ở đâu cũng đúng):
+\begin{codebox}
+\begin{verbatim}
+cd /Users/vinh/Documents
+\end{verbatim}
+\end{codebox}
+
+\textbf{Cách tương đối} (vì Documents nằm ngay trong chỗ tôi đứng):
+\begin{codebox}
+\begin{verbatim}
+cd Documents
+\end{verbatim}
+\end{codebox}
+
+Cả hai dẫn tới \textbf{cùng một nơi}. Kiểm chứng bằng \texttt{pwd} sau mỗi lần --- kết quả giống hệt: \texttt{/Users/vinh/Documents}.
+
+Một ví dụ song song nữa --- giả sử bạn đang ở \texttt{/Users/vinh/Documents} và muốn sang \texttt{/Users/vinh/Downloads}:
+
+\begin{codebox}
+\begin{verbatim}
+cd /Users/vinh/Downloads     # tuyet doi
+\end{verbatim}
+\end{codebox}
+\begin{codebox}
+\begin{verbatim}
+cd ../Downloads              # tuong doi: lui len cha (ve /Users/vinh) roi vao Downloads
+\end{verbatim}
+\end{codebox}
+
+\begin{seniorbox}[title={Góc Senior \#2 --- Vì sao đường dẫn tuyệt đối quan trọng sống còn}]
+Khi gõ tay trong Terminal, đường dẫn tương đối rất tiện (gõ ngắn). Nhưng trong \textbf{automation} --- tức là khi máy tự chạy lệnh thay bạn --- đường dẫn tương đối là \textbf{nguồn bug số một}.
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Script} (file chứa danh sách lệnh để máy tự chạy) và \textbf{cron} (bộ hẹn giờ chạy lệnh tự động trên Linux) chạy trong một \textbf{môi trường tối giản} mà bạn \textbf{không ngờ tới}. Cron của một người dùng thường khởi động ở \textbf{thư mục nhà} của người đó --- nhưng điều này không được bảo đảm tuyệt đối giữa các hệ.
+  \item Nếu script viết \texttt{ls Documents} (tương đối), nó sẽ tìm \texttt{Documents} ở chỗ cron đang đứng --- có thể \textbf{không tồn tại} $\rightarrow$ lỗi. Cùng script đó chạy tay trên máy bạn lại đúng. Loại bug ``chạy tay thì được, chạy tự động thì hỏng'' này tốn rất nhiều giờ debug.
+  \item \textbf{Thủ phạm gây gãy nhiều nhất} thực ra là \textbf{hai} thứ kết hợp: (1) thư mục hiện tại (cwd) \textbf{không đảm bảo}, và (2) \textbf{biến môi trường tối giản} của cron --- đặc biệt \texttt{PATH} ngắn nên ngay cả tên lệnh cũng có thể không tìm thấy.
+  \item \textbf{Quy tắc vàng của senior:} trong script và cron, \textbf{luôn dùng đường dẫn tuyệt đối} cho cả \textbf{file lẫn lệnh} (ví dụ \texttt{/bin/ls} thay vì \texttt{ls}), hoặc xác định rõ thư mục bằng \texttt{cd} ngay đầu script. Đừng bao giờ tin vào ``thư mục hiện tại''.
+  \item Đó cũng là lý do \texttt{pwd} hữu ích \textbf{trong script}: thêm một dòng \texttt{pwd} để in ra ``tôi đang chạy ở đâu'' giúp bạn debug cực nhanh khi mọi thứ đi sai.
+\end{itemize}
+\end{seniorbox}
+
+% =====================================================
+\section{Các thư mục quan trọng trên hệ Unix/Linux}
+
+macOS được xây trên nền Unix, nên nó \textbf{chia sẻ rất nhiều} thư mục chuẩn với Linux. Dưới đây là những thư mục bạn sẽ gặp đi gặp lại. Cứ \texttt{ls} để xem, nhưng \textbf{không sửa/xóa gì} trong vùng hệ thống.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{1.5cm} >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{6.2cm} >{\raggedright\arraybackslash}p{2.6cm}}
+\rowcolor{checkback}
+\textbf{Thư mục} & \textbf{Tên gọi} & \textbf{Chứa gì} & \textbf{Trên macOS?} \\
+\hline
+\endhead
+\texttt{/} & root (gốc) & Gốc của mọi thứ. Mọi đường dẫn tuyệt đối bắt đầu từ đây. & Có \\
+\texttt{/Users} & (macOS) & Thư mục nhà của các người dùng. Tương đương \texttt{/home} của Linux. & Có (đây là chỗ của bạn) \\
+\texttt{/home} & (Linux) & Thư mục nhà người dùng trên Linux. & Có tồn tại nhưng thường \textbf{rỗng} (automount); nhà của bạn ở \texttt{/Users} \\
+\texttt{/etc} & et-cetera & \textbf{Cấu hình} toàn hệ thống (settings). Ví dụ cấu hình mạng, người dùng. & Có \\
+\texttt{/var} & variable & Dữ liệu \textbf{thay đổi liên tục}: log (nhật ký), hàng đợi, cache. & Có \\
+\texttt{/tmp} & temporary & File \textbf{tạm}, có thể bị xóa khi khởi động lại. Vùng ``nháp''. & Có \\
+\texttt{/usr} & Unix System Resources & Chương trình \& thư viện \textbf{cài cho người dùng} (không phải file cá nhân của bạn). & Có \\
+\texttt{/bin} & binaries & Một nhóm \textbf{lệnh/chương trình lõi tối thiểu} (như \texttt{ls}, \texttt{cp}, \texttt{mv}, \texttt{rm}, \texttt{cat}\ldots). & Có \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+\begin{notebox}[title={Lưu ý về \texttt{/bin} và shell builtin}]
+\texttt{/bin} chứa các \textbf{file chương trình} thật sự như \texttt{ls}, \texttt{cp}, \texttt{mv}, \texttt{rm}, \texttt{cat}. Nhưng \textbf{\texttt{cd} KHÔNG nằm ở đây} --- \texttt{cd} là một \textbf{lệnh tích hợp sẵn trong shell (shell builtin)}, không phải file thực thi riêng. Nếu bạn gõ \texttt{ls /bin/cd} sẽ thấy báo \texttt{No such file or directory}, và \texttt{type cd} sẽ trả lời \texttt{cd is a shell builtin}. (\texttt{pwd} cũng có dạng builtin tương tự.) Ngoài ra, nhiều lệnh khác nằm ở \texttt{/usr/bin} chứ không phải \texttt{/bin} --- \texttt{/bin} chỉ giữ một nhóm lệnh lõi tối thiểu.
+\end{notebox}
+
+\begin{notebox}[title={Lưu ý macOS}]
+Apple đặt thêm vài thư mục riêng (\texttt{/System}, \texttt{/Applications}, \texttt{/Library}, \texttt{/Volumes}). Và macOS hiện đại \textbf{bảo vệ rất chặt} vùng hệ thống (cơ chế SIP --- System Integrity Protection), nên kể cả muốn nghịch dại cũng khó. Dù vậy: \textbf{thói quen tốt là không đụng vào thư mục hệ thống khi chưa hiểu rõ.}
+\end{notebox}
+
+\begin{seniorbox}[title={Góc Senior \#3 --- FHS (Filesystem Hierarchy Standard)}]
+Bố cục thư mục ở trên không phải ngẫu nhiên. Nó tuân theo một \textbf{tiêu chuẩn} tên là \textbf{FHS --- Filesystem Hierarchy Standard} (Tiêu chuẩn phân cấp hệ thống file). FHS quy định ``loại file gì thì nằm ở đâu'' trên các hệ Linux.
+
+Vì sao senior \textbf{bắt buộc} phải thuộc bố cục này?
+\begin{itemize}[leftmargin=*]
+  \item Khi vào một server Linux lạ hoắc lúc 2 giờ sáng để xử lý sự cố, bạn phải biết \textbf{log nằm ở \texttt{/var/log}}, \textbf{cấu hình nằm ở \texttt{/etc}} --- không có thời gian mò mẫm.
+  \item Hỏng dịch vụ web? $\rightarrow$ đọc \texttt{/var/log}. Sửa cấu hình nginx? $\rightarrow$ vào \texttt{/etc/nginx}. File tạm đầy ổ đĩa? $\rightarrow$ kiểm tra \texttt{/tmp} và \texttt{/var}.
+  \item FHS giúp \textbf{mọi máy Linux trông giống nhau} ở những chỗ quan trọng, nên kỹ năng của bạn \textbf{chuyển được} từ máy này sang máy khác.
+\end{itemize}
+
+macOS \textbf{không tuân thủ FHS 100\%} (Apple có cấu trúc riêng cho phần đồ họa và ứng dụng), nhưng phần ``lõi Unix'' thì rất giống. Học trên Mac $\rightarrow$ áp dụng được phần lớn sang Linux server.
+\end{seniorbox}
+
+\begin{checkbox}[title={Tự kiểm tra 5}]
+Trên một server Linux, bạn muốn xem nhật ký (log) của hệ thống thì thường vào thư mục nào? Còn cấu hình hệ thống nằm ở đâu?
+\end{checkbox}
+
+% =====================================================
+\section{Lab chính --- xây sân tập an toàn}
+
+Giờ là phần quan trọng nhất: \textbf{gõ tay toàn bộ}. Lab này \textbf{tuyệt đối an toàn} --- chúng ta chỉ điều hướng và tạo/xóa thư mục \textbf{tập rỗng}, không đụng tới file thật của bạn.
+
+\begin{labbox}[title={Bước 1 --- Xác định vị trí}]
+\begin{codebox}
+\begin{verbatim}
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:} \texttt{/Users/vinh} (tên bạn thay cho \texttt{vinh}). Nếu không phải, gõ \texttt{cd} để về nhà trước.
+\end{labbox}
+
+\begin{labbox}[title={Bước 2 --- Xem có gì trong nhà}]
+\begin{codebox}
+\begin{verbatim}
+ls -la
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:} một danh sách dài, có cả file ẩn (\texttt{.zshrc}, \texttt{.config}\ldots) lẫn thư mục thường (\texttt{Desktop}, \texttt{Documents}\ldots). Bạn thấy \texttt{.} và \texttt{..} ở trên cùng.
+\end{labbox}
+
+\begin{notebox}[title={Thuật ngữ --- \texttt{mkdir}}]
+Viết tắt \textbf{m}a\textbf{k}e \textbf{dir}ectory (tạo thư mục). Cờ \textbf{\texttt{-p}} (= \textbf{p}arents) bảo nó \textbf{tạo luôn cả các thư mục cha} nếu chưa có, một mạch nhiều tầng. Không có \texttt{-p}, \texttt{mkdir} sẽ báo lỗi nếu thư mục cha chưa tồn tại.
+\end{notebox}
+
+\begin{labbox}[title={Bước 3 --- Tạo sân tập (giới thiệu \texttt{mkdir})}]
+\begin{codebox}
+\begin{verbatim}
+mkdir -p ~/linux-lab/tang1/tang2
+\end{verbatim}
+\end{codebox}
+Lệnh này tạo một mạch ba tầng: \texttt{linux-lab} $\rightarrow$ bên trong có \texttt{tang1} $\rightarrow$ bên trong có \texttt{tang2}. Lệnh chạy xong \textbf{không in ra gì} --- trong Unix, ``im lặng nghĩa là thành công''.
+
+Kiểm tra:
+\begin{codebox}
+\begin{verbatim}
+ls ~/linux-lab
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:}
+\begin{codebox}
+\begin{verbatim}
+tang1
+\end{verbatim}
+\end{codebox}
+\end{labbox}
+
+\begin{labbox}[title={Bước 4 --- Đi vào tận đáy bằng đường dẫn tuyệt đối}]
+\begin{codebox}
+\begin{verbatim}
+cd ~/linux-lab/tang1/tang2
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:}
+\begin{codebox}
+\begin{verbatim}
+/Users/vinh/linux-lab/tang1/tang2
+\end{verbatim}
+\end{codebox}
+Bạn đang đứng ở tầng sâu nhất.
+\end{labbox}
+
+\begin{labbox}[title={Bước 5 --- Đi lại bằng đường dẫn TƯƠNG ĐỐI}]
+Lên thư mục cha (\texttt{tang1}):
+\begin{codebox}
+\begin{verbatim}
+cd ..
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:} \texttt{/Users/vinh/linux-lab/tang1}
+
+Giờ thử \textbf{lên hai bậc một lúc}. Để rõ ràng, ta quay về đáy trước cho chắc rồi mới lên hai bậc:
+\begin{codebox}
+\begin{verbatim}
+cd ~/linux-lab/tang1/tang2     # ve lai day cho chac
+cd ../..                        # len 2 bac
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:} \texttt{/Users/vinh/linux-lab}\\
+(Từ \texttt{tang2} lên 2 bậc: \texttt{tang2} $\rightarrow$ \texttt{tang1} $\rightarrow$ \texttt{linux-lab}.)
+
+Giờ thử ``quay đầu xe'' với \texttt{cd -}:
+\begin{codebox}
+\begin{verbatim}
+cd -
+pwd
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:} \texttt{/Users/vinh/linux-lab/tang1/tang2}
+\end{labbox}
+
+\begin{notebox}
+Ngay khi bạn gõ \texttt{cd -}, nó sẽ \textbf{tự in ra một dòng} đường dẫn (chính là \texttt{/Users/vinh/linux-lab/tang1/tang2}) --- đây là hành vi bình thường, riêng có của \texttt{cd -}. Sau đó \texttt{pwd} xác nhận lại vị trí.
+\end{notebox}
+
+\texttt{cd -} đưa bạn về \textbf{chỗ ngay trước đó} (chính là \texttt{tang2}). Lệnh này cực tiện khi bạn nhảy qua lại giữa hai thư mục xa nhau. Gõ \texttt{cd -} lần nữa sẽ lại quay về \texttt{linux-lab} --- nó như nút ``qua lại'' giữa hai vị trí gần nhất.
+
+\begin{tipbox}[title={Bước 6 --- Mẹo gõ nhanh: phím Tab (tab-completion)}]
+Đây là \textbf{kỹ năng đổi đời} cho người mới. Thử:
+\begin{enumerate}[leftmargin=*]
+  \item Gõ: \texttt{cd \hm/linux-l} rồi \textbf{DỪNG}, nhấn phím \textbf{Tab}.
+  \item Terminal \textbf{tự hoàn thành} thành \texttt{cd \hm/linux-lab/}.
+  \item Nhấn \textbf{Tab} tiếp $\rightarrow$ tự thêm \texttt{tang1/} (vì đó là lựa chọn duy nhất).
+  \item Nhấn \textbf{Tab} tiếp $\rightarrow$ tự thêm \texttt{tang2/}.
+\end{enumerate}
+
+\textbf{Tab-completion} = gõ vài chữ đầu rồi nhấn Tab để máy điền nốt phần còn lại của tên thư mục/file. Lợi ích:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Nhanh hơn} nhiều, đỡ mỏi tay.
+  \item \textbf{Tránh gõ sai chính tả} --- nếu Tab không hoàn thành, nghĩa là tên đó \textbf{không tồn tại} (báo lỗi sớm!).
+  \item Nếu có nhiều lựa chọn trùng đầu, nhấn Tab hai lần để \textbf{liệt kê} tất cả khả năng.
+\end{itemize}
+\end{tipbox}
+
+\begin{notebox}[title={Thuật ngữ --- \texttt{rmdir}}]
+Viết tắt \textbf{r}e\textbf{m}ove \textbf{dir}ectory (xóa thư mục). Điểm cực kỳ quan trọng: \textbf{\texttt{rmdir} CHỈ xóa được thư mục RỖNG.} Nếu thư mục còn chứa bất cứ thứ gì, nó sẽ \textbf{từ chối} và báo lỗi. Chính vì thế \texttt{rmdir} rất an toàn cho người mới --- nó \textbf{không thể} vô tình xóa nhầm dữ liệu của bạn.
+\end{notebox}
+
+\begin{labbox}[title={Bước 7 --- Thử ``lưới an toàn'' của \texttt{rmdir} TRƯỚC khi dọn}]
+Trước khi dọn sạch, hãy \textbf{chứng kiến tận mắt} lưới an toàn này. Lúc này cây \texttt{\hm/linux-lab/tang1/tang2} vẫn còn nguyên, nên \texttt{linux-lab} đang chứa \texttt{tang1}. Thử xóa \texttt{linux-lab} khi nó \textbf{chưa rỗng}:
+\begin{codebox}
+\begin{verbatim}
+rmdir ~/linux-lab
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:}
+\begin{codebox}
+\begin{verbatim}
+rmdir: /Users/vinh/linux-lab: Directory not empty
+\end{verbatim}
+\end{codebox}
+\texttt{rmdir} \textbf{từ chối} vì thư mục còn nội dung bên trong. Đây chính là ``lưới an toàn'' --- \texttt{rmdir} không thể vô tình xóa dữ liệu của bạn.
+\end{labbox}
+
+\begin{labbox}[title={Bước 8 --- Dọn sân tập đúng cách (xóa từ trong ra ngoài)}]
+Trước hết về nhà cho an toàn (không xóa thư mục mình đang đứng trong đó):
+\begin{codebox}
+\begin{verbatim}
+cd ~
+\end{verbatim}
+\end{codebox}
+Vì phải \textbf{rỗng} mới xóa được, ta xóa từ tầng sâu nhất (\texttt{tang2}) ra ngoài dần:
+\begin{codebox}
+\begin{verbatim}
+rmdir ~/linux-lab/tang1/tang2
+rmdir ~/linux-lab/tang1
+rmdir ~/linux-lab
+\end{verbatim}
+\end{codebox}
+Mỗi lệnh thành công sẽ \textbf{im lặng}. Kiểm tra đã xóa sạch:
+\begin{codebox}
+\begin{verbatim}
+ls ~/linux-lab
+\end{verbatim}
+\end{codebox}
+\textbf{Kết quả mong đợi:}
+\begin{codebox}
+\begin{verbatim}
+ls: /Users/vinh/linux-lab: No such file or directory
+\end{verbatim}
+\end{codebox}
+Báo ``No such file or directory'' (không có file/thư mục này) --- nghĩa là dọn sạch thành công!
+\end{labbox}
+
+\begin{warnbox}
+Việc xóa thư mục \textbf{có nội dung} (và xóa file) cần lệnh khác (\texttt{rm}) --- một lệnh \textbf{nguy hiểm} mà ta sẽ học cẩn thận ở chương sau.
+\end{warnbox}
+
+\begin{checkbox}[title={Tự kiểm tra 6}]
+Vì sao \texttt{rmdir} được coi là an toàn cho người mới? Nếu thư mục còn file bên trong, \texttt{rmdir} sẽ làm gì?
+\end{checkbox}
+
+% =====================================================
+\section{Bảng đối chiếu macOS vs Linux (khía cạnh điều hướng)}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{4cm}}
+\rowcolor{checkback}
+\textbf{Khía cạnh} & \textbf{macOS} & \textbf{Linux} & \textbf{Ghi chú} \\
+\hline
+\endhead
+Thư mục nhà thực sự & \texttt{/Users/<tên>} & \texttt{/home/<tên>} & Khác biệt rõ rệt nhất; nhớ dùng \texttt{\hm} để khỏi lo \\
+\texttt{/home} & Tồn tại nhưng thường rỗng (automount) & Là nơi chứa nhà người dùng & Trên Mac, \texttt{ls /home} có thể không thấy gì --- bình thường \\
+\texttt{pwd}, \texttt{cd}, \texttt{ls} (cơ bản) & Giống & Giống & Họ Unix chung \\
+\texttt{\hm}, \texttt{.}, \texttt{..}, \texttt{/} & Giống & Giống & Ký hiệu đường dẫn như nhau \\
+\texttt{mkdir -p}, \texttt{rmdir} & Giống & Giống & Hành xử như nhau \\
+Phiên bản \texttt{ls} & BSD & GNU (coreutils) & Cả hai đều bật màu được, nhưng \texttt{-G} mang nghĩa KHÁC NHAU (BSD: bật màu; GNU: ẩn cột group); một số cờ dài \texttt{-{}-option} của GNU không có trên BSD \\
+\texttt{/etc}, \texttt{/var}, \texttt{/tmp}, \texttt{/usr}, \texttt{/bin} & Có & Có & Phần lõi Unix giống nhau \\
+Tuân thủ FHS & Một phần & Đầy đủ hơn & Apple có cấu trúc riêng cho GUI/app \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+\textbf{Kết luận quan trọng:} 90\% những gì bạn học về điều hướng trên Mac \textbf{áp dụng thẳng} sang Linux server. Đây là lý do học DevOps trên Mac rất thuận lợi.
+
+% =====================================================
+\section{Hiểu lầm thường gặp (đọc kỹ để không sa bẫy)}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{``Thư mục và folder là hai thứ khác nhau.''} \\
+  $\rightarrow$ \textbf{Sai.} Chúng là \textbf{một}. ``Folder'' là tên gọi trong giao diện đồ họa (Finder), ``directory'' là tên gọi trong dòng lệnh. Cùng một vật.
+
+  \item \textbf{``Phải nhớ thuộc lòng mọi đường dẫn.''} \\
+  $\rightarrow$ \textbf{Không cần.} Đã có \textbf{phím Tab} điền hộ, có \texttt{pwd} để biết mình ở đâu, có \texttt{ls} để nhìn xung quanh. Senior không nhớ đường dẫn --- họ \textbf{điều hướng và dùng Tab}.
+
+  \item \textbf{``\texttt{cd} bắt buộc phải dùng đường dẫn tuyệt đối.''} \\
+  $\rightarrow$ \textbf{Sai.} \texttt{cd} nhận cả tương đối (\texttt{cd Documents}, \texttt{cd ..}) lẫn tuyệt đối. Khi gõ tay, tương đối thường nhanh hơn.
+
+  \item \textbf{``Lệnh chạy xong không in gì là bị lỗi.''} \\
+  $\rightarrow$ \textbf{Sai.} Trong Unix, \textbf{im lặng = thành công}. \texttt{mkdir}, \texttt{rmdir} và \textbf{hầu hết} các dạng \texttt{cd} thành công đều không in gì. \textbf{Ngoại lệ:} \texttt{cd -} cố ý in ra nơi nó vừa chuyển tới. Có thông báo đỏ/lỗi mới là chuyện đáng lo.
+
+  \item \textbf{``File ẩn (dotfile) là file hỏng hoặc virus.''} \\
+  $\rightarrow$ \textbf{Sai.} Dotfile chỉ là file cấu hình được \textbf{giấu cho gọn}. \texttt{.zshrc}, \texttt{.gitconfig} là bạn thân của DevOps.
+
+  \item \textbf{``\texttt{\hm} và \texttt{/} giống nhau.''} \\
+  $\rightarrow$ \textbf{Sai.} \texttt{/} là \textbf{gốc} của cả cây (cao nhất). \texttt{\hm} là \textbf{nhà của bạn} (\texttt{/Users/<tên>}), nằm sâu bên trong cây.
+
+  \item \textbf{``\texttt{cd} là một chương trình nằm trong \texttt{/bin}.''} \\
+  $\rightarrow$ \textbf{Sai.} \texttt{cd} là \textbf{lệnh tích hợp sẵn của shell (builtin)}, không phải file thực thi. \texttt{ls /bin/cd} sẽ báo ``No such file or directory''. Còn \texttt{ls}, \texttt{cp}, \texttt{mv}, \texttt{rm} thì mới là file thật trong \texttt{/bin}.
+\end{enumerate}
+
+% =====================================================
+\section{Tóm tắt 1 trang}
+
+\begin{notebox}[title={Tóm tắt}]
+\textbf{Cây thư mục:} mọi thứ mọc từ gốc \texttt{/}. Thư mục lồng nhau như tủ hồ sơ; file là ``lá''.
+
+\vspace{0.4em}
+\textbf{Ba vị trí:} \texttt{.} = đây $\mid$ \texttt{..} = cha $\mid$ \texttt{\hm} = nhà (macOS: \texttt{/Users/<tên>}, Linux: \texttt{/home/<tên>}).
+
+\vspace{0.4em}
+\textbf{Lệnh lõi:}
+\renewcommand{\arraystretch}{1.3}
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{4cm} >{\raggedright\arraybackslash}p{8cm}}
+\rowcolor{checkback}
+\textbf{Lệnh} & \textbf{Tác dụng} \\
+\hline
+\texttt{pwd} & Tôi đang ở đâu (in đường dẫn tuyệt đối) \\
+\texttt{ls} & Liệt kê nội dung \\
+\texttt{ls -l} & Chi tiết (quyền, chủ, size, ngày) \\
+\texttt{ls -a} & Hiện cả file ẩn (dotfile) \\
+\texttt{ls -la} & Chi tiết + ẩn \\
+\texttt{ls <path>} & Xem nơi khác mà không cần đi tới \\
+\texttt{cd <path>} & Đi tới \\
+\texttt{cd} hoặc \texttt{cd \hm} & Về nhà \\
+\texttt{cd ..} & Lên cha \\
+\texttt{cd -} & Về chỗ trước (lệnh này TỰ IN đường dẫn) \\
+\texttt{cd /} & Về gốc \\
+\texttt{mkdir -p a/b/c} & Tạo cây thư mục nhiều tầng \\
+\texttt{rmdir <dir>} & Xóa thư mục RỖNG (an toàn) \\
+\end{tabular}
+\end{center}
+\renewcommand{\arraystretch}{1}
+
+\vspace{0.4em}
+\textbf{Đường dẫn:} tuyệt đối bắt đầu bằng \texttt{/} (đúng ở mọi nơi) $\mid$ tương đối tính từ chỗ đang đứng.
+
+\vspace{0.4em}
+\textbf{Phản xạ vàng:} dùng \textbf{Tab} để điền tên; dùng \textbf{đường dẫn tuyệt đối trong script/cron} (cho cả file lẫn lệnh).
+
+\vspace{0.4em}
+\textbf{Thư mục cần biết:} \texttt{/etc} (cấu hình), \texttt{/var/log} (nhật ký), \texttt{/tmp} (tạm), \texttt{/usr} (chương trình), \texttt{/bin} (lệnh lõi). Lưu ý: \texttt{cd}/\texttt{pwd} là shell builtin, không nằm trong \texttt{/bin}.
+\end{notebox}
+
+% =====================================================
+\section{Thẻ ghi nhớ (Flashcards)}
+
+Che cột phải, tự trả lời, rồi mở ra kiểm tra.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{>{\raggedright\arraybackslash}p{6cm} >{\raggedright\arraybackslash}p{8.5cm}}
+\rowcolor{flashback}
+\textbf{Mặt trước (hỏi)} & \textbf{Mặt sau (đáp)} \\
+\hline
+\endhead
+\texttt{pwd} làm gì? & In thư mục hiện tại (print working directory) \\
+\texttt{ls -a} hiện thêm gì? & File ẩn (dotfile, tên bắt đầu bằng \texttt{.}) \\
+\texttt{ls -l} cho biết gì? & Chi tiết: quyền, chủ sở hữu, kích thước, ngày sửa \\
+\texttt{cd ..} đi đâu? & Lên thư mục cha (1 bậc) \\
+\texttt{cd -} đi đâu? & Về thư mục vừa ở trước đó (và TỰ IN đường dẫn đó ra) \\
+\texttt{cd} (không tham số) đi đâu? & Về thư mục nhà \\
+Ký hiệu \texttt{\hm} nghĩa là? & Thư mục nhà (macOS: \texttt{/Users/<tên>}) \\
+Ký hiệu \texttt{.} và \texttt{..}? & \texttt{.} = thư mục hiện tại; \texttt{..} = thư mục cha \\
+Đường dẫn tuyệt đối bắt đầu bằng? & Dấu \texttt{/} (gốc) \\
+\texttt{mkdir -p} khác \texttt{mkdir} ở đâu? & \texttt{-p} tạo luôn các thư mục cha còn thiếu \\
+\texttt{rmdir} chỉ xóa được gì? & Thư mục RỖNG (an toàn) \\
+Thư mục log trên Linux? & \texttt{/var/log} \\
+Thư mục cấu hình hệ thống? & \texttt{/etc} \\
+FHS là gì? & Filesystem Hierarchy Standard --- chuẩn ``file gì nằm ở đâu'' \\
+\texttt{cd} là chương trình trong \texttt{/bin}? & KHÔNG --- \texttt{cd} là shell builtin, không phải file thực thi \\
+Bật màu cho \texttt{ls}: macOS vs Linux? & Cả hai đều có \texttt{ls -{}-color}; macOS có thêm \texttt{ls -G}. Cẩn thận: \texttt{-G} trên GNU/Linux lại mang nghĩa KHÁC (ẩn cột group, không phải màu) \\
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+% =====================================================
+\section{Kế hoạch ôn ngắt quãng (Spaced Repetition)}
+
+Ghi nhớ lâu dài cần \textbf{ôn lại đúng lúc sắp quên}. Theo lịch:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Sau 1 ngày:} Mở Terminal, KHÔNG nhìn sách, làm lại Lab Chính từ đầu (tạo \texttt{\hm/linux-lab/tang1/tang2}, đi lại tương đối, dọn bằng \texttt{rmdir}). Đọc lại ``Tóm tắt 1 trang''.
+  \item \textbf{Sau 3 ngày:} Lật bộ Thẻ ghi nhớ, tự trả lời. Làm Bài tập mở rộng \#2 và \#3 (phần N). Tự giải thích cho mình (hoặc cho người khác) sự khác nhau giữa đường dẫn tuyệt đối và tương đối.
+  \item \textbf{Sau 1 tuần:} Làm toàn bộ ``Tự kiểm tra'' 1$\rightarrow$6 mà không xem đáp án trước. Làm lại Bài tập mở rộng \#1. Nếu trả lời trôi chảy $\geq$ 80\% $\rightarrow$ bạn đã nắm chắc chương này, sẵn sàng sang chương sau.
+\end{itemize}
+
+\begin{tipbox}[title={Mẹo senior}]
+Sau mỗi buổi, \textbf{xóa lịch sử trong đầu} rồi gõ lại bằng phản xạ. Cơ bắp ngón tay nhớ lệnh còn quan trọng hơn trí nhớ lý thuyết.
+\end{tipbox}
+
+% =====================================================
+\section{Bài tập mở rộng (Stretch) --- có đáp án}
+
+\subsection{Bài 1 --- Xây và khám phá cây sâu hơn}
+Tạo cấu trúc \texttt{\hm/duan/web/src/components}, đi vào tận \texttt{components}, in vị trí, rồi quay về nhà chỉ bằng MỘT lệnh.
+
+\begin{notebox}[title={Đáp án / kết quả mong đợi}]
+\begin{codebox}
+\begin{verbatim}
+mkdir -p ~/duan/web/src/components
+cd ~/duan/web/src/components
+pwd        # -> /Users/<ten>/duan/web/src/components
+cd         # ve nha bang mot lenh (hoac cd ~)
+pwd        # -> /Users/<ten>
+\end{verbatim}
+\end{codebox}
+Dọn dẹp: \texttt{rmdir \hm/duan/web/src/components \hm/duan/web/src \hm/duan/web \hm/duan} (xóa từ trong ra).
+\end{notebox}
+
+\subsection{Bài 2 --- Cùng đích, hai con đường}
+Bạn đang ở \texttt{\hm/duan/web}. Hãy vào \texttt{\hm/duan} bằng \textbf{hai cách}: một tuyệt đối, một tương đối.
+
+\begin{notebox}[title={Đáp án}]
+\begin{codebox}
+\begin{verbatim}
+cd ~/duan/web
+cd /Users/<ten>/duan     # tuyet doi (thay <ten> bang ten ban)
+# hoac:
+cd ~/duan/web
+cd ..                    # tuong doi - lui len cha
+\end{verbatim}
+\end{codebox}
+Cả hai đều cho \texttt{pwd} $\rightarrow$ \texttt{/Users/<tên>/duan}.
+\end{notebox}
+
+\subsection{Bài 3 --- Soi file ẩn và đếm}
+Hiển thị \textbf{tất cả} nội dung thư mục nhà ở dạng chi tiết, và tìm xem có file \texttt{.zshrc} không.
+
+\begin{notebox}[title={Đáp án / kết quả mong đợi}]
+\begin{codebox}
+\begin{verbatim}
+ls -la ~
+\end{verbatim}
+\end{codebox}
+Tìm dòng có tên \texttt{.zshrc} ở cuối. Nếu thấy một dòng kết thúc bằng \texttt{.zshrc} $\rightarrow$ có. Nếu máy bạn dùng shell khác có thể không có \texttt{.zshrc} mà có \texttt{.bash\_profile} --- cả hai đều là dotfile cấu hình, không sao cả.
+
+\vspace{0.4em}
+(Nâng cao --- xem trước chương sau): \texttt{ls -la \hm | grep zshrc} sẽ lọc chỉ in dòng chứa ``zshrc''. \texttt{grep} là lệnh tìm kiếm, ta học sau.
+\end{notebox}
+
+\subsection{Bài 4 --- ``Quay đầu xe'' liên tục}
+Đứng ở nhà, \texttt{cd /etc}, rồi \texttt{cd /var}, rồi dùng \texttt{cd -} hai lần. Dự đoán bạn ở đâu sau mỗi lần trước khi gõ. (Nhớ: mỗi lần \texttt{cd -} sẽ tự in ra đường dẫn nó vừa chuyển tới.)
+
+\begin{notebox}[title={Đáp án}]
+\begin{codebox}
+\begin{verbatim}
+cd ~            # o /Users/<ten>
+cd /etc         # o /etc   (truoc do: nha)
+cd /var         # o /var   (truoc do: /etc)
+cd -            # -> /etc   (quay ve cho truoc = /etc; lenh in ra dong /etc)
+cd -            # -> /var   (lai quay ve cho truoc = /var; lenh in ra dong /var)
+\end{verbatim}
+\end{codebox}
+\texttt{cd -} luôn nhảy qua lại giữa \textbf{hai} vị trí gần nhất, và \textbf{tự in ra} đường dẫn đích mỗi lần.
+\end{notebox}
+
+\subsection{Bài 5 (tư duy Senior) --- Bẫy đường dẫn tương đối}
+Một bạn viết script chứa dòng \texttt{ls duan}. Chạy tay trong thư mục nhà thì OK, nhưng đặt vào cron lại báo \texttt{No such file or directory}. Vì sao, và sửa thế nào?
+
+\begin{notebox}[title={Đáp án}]
+\textbf{Vì sao:} \texttt{duan} là đường dẫn \textbf{tương đối}, tính từ ``thư mục hiện tại''. Khi chạy tay, thư mục hiện tại là nhà (\texttt{/Users/<tên>}) nên thấy \texttt{duan}. Cron của user thường khởi động ở thư mục \textbf{nhà} của user --- nhưng điều khiến script gãy nhiều nhất là: (1) thư mục hiện tại \textbf{không được bảo đảm}, và (2) cron chạy trong \textbf{môi trường tối giản} (\texttt{PATH} ngắn, thiếu biến môi trường), nên ngay cả tên lệnh cũng có thể không tìm thấy.
+
+\vspace{0.4em}
+\textbf{Sửa:} Dùng \textbf{đường dẫn tuyệt đối} cho cả file lẫn lệnh:
+\begin{codebox}
+\begin{verbatim}
+/bin/ls /Users/<ten>/duan
+\end{verbatim}
+\end{codebox}
+Hoặc xác định thư mục ngay đầu script: \texttt{cd /Users/<tên>} trước khi chạy các lệnh tương đối. Đây chính là \textbf{Quy tắc vàng} ở Góc Senior \#2.
+\end{notebox}
+
+% =====================================================
+\section{Đáp án phần ``Tự kiểm tra''}
+
+\begin{enumerate}[leftmargin=*]
+  \item macOS: \texttt{/Users/lan}. Linux: \texttt{/home/lan}. (Dấu \texttt{\hm} đại diện cho cả hai tùy hệ.)
+  \item \texttt{pwd} = \textbf{p}rint \textbf{w}orking \textbf{d}irectory. \textbf{Không} làm thay đổi vị trí --- chỉ in ra.
+  \item Xem chi tiết + ẩn của nhà: \texttt{ls -la \hm} (hoặc \texttt{ls -la} khi đang ở nhà). Liệt kê \texttt{/tmp} mà không rời chỗ: \texttt{ls /tmp}.
+  \item \texttt{cd ..} từ \texttt{/Users/vinh/Documents} $\rightarrow$ tới \texttt{/Users/vinh}. Gõ tiếp \texttt{cd -} $\rightarrow$ quay lại \texttt{/Users/vinh/Documents} (chỗ vừa rời), và lệnh sẽ tự in ra dòng đường dẫn đó.
+  \item Log: \texttt{/var/log}. Cấu hình hệ thống: \texttt{/etc}.
+  \item \texttt{rmdir} an toàn vì nó \textbf{chỉ xóa được thư mục RỖNG} --- không thể vô tình xóa dữ liệu. Nếu thư mục còn file bên trong, \texttt{rmdir} \textbf{từ chối} và báo \texttt{Directory not empty}.
+\end{enumerate}
+
+\vspace{1em}
+\begin{tcolorbox}[colback=labback, colframe=labcolor, boxrule=0.8pt, arc=2pt]
+\textbf{Chúc mừng!} Bạn vừa làm chủ kỹ năng đi lại trong hệ thống file --- nền tảng cho \textbf{mọi} việc DevOps sau này. Mọi server bạn sẽ quản lý đều bắt đầu bằng \texttt{pwd}, \texttt{ls}, \texttt{cd}. Ở \textbf{Chương 3}, chúng ta sẽ học \textbf{tạo, xem, sao chép, di chuyển và xóa file} (gặp lại lệnh \texttt{rm} đầy quyền lực và cách dùng nó mà không ``tự bắn vào chân''). Hẹn gặp lại!
+\end{tcolorbox}
+
+\end{document}
