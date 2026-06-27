@@ -1,0 +1,761 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+%% ---- Fonts (Latin Modern via .otf file names) ----
+\setmainfont{lmroman10-regular.otf}[
+  BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf,
+  BoldItalicFont=lmroman10-bolditalic.otf]
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmono10-italic.otf]
+
+%% ---- Languages ----
+\setdefaultlanguage{vietnamese}
+\setotherlanguage{english}
+
+%% ---- Hyperref ----
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black,
+  citecolor=blue!55!black,
+  pdftitle={Chuong 4 - Chuyen huong va Pipe},
+  pdfauthor={Linux Lab}
+}
+
+%% ---- Colors ----
+\definecolor{labgreen}{HTML}{1B7340}
+\definecolor{labgreenbg}{HTML}{E9F7EF}
+\definecolor{seniorblue}{HTML}{1F4E79}
+\definecolor{seniorbluebg}{HTML}{E8F0FA}
+\definecolor{checkpurple}{HTML}{6A1B9A}
+\definecolor{checkpurplebg}{HTML}{F3E9F8}
+\definecolor{noteorange}{HTML}{B35900}
+\definecolor{noteorangebg}{HTML}{FCF3E6}
+\definecolor{dangerred}{HTML}{B00020}
+\definecolor{dangerredbg}{HTML}{FBE7E9}
+\definecolor{coderulegray}{HTML}{888888}
+
+%% ---- tcolorbox styles ----
+\newtcolorbox{labbox}[1][]{
+  enhanced, breakable,
+  colback=labgreenbg, colframe=labgreen,
+  coltitle=white, fonttitle=\bfseries,
+  title={Thực hành ngay}, #1}
+
+\newtcolorbox{seniorbox}[1][]{
+  enhanced, breakable,
+  colback=seniorbluebg, colframe=seniorblue,
+  coltitle=white, fonttitle=\bfseries,
+  title={Góc Senior}, #1}
+
+\newtcolorbox{checkbox}[1][]{
+  enhanced, breakable,
+  colback=checkpurplebg, colframe=checkpurple,
+  coltitle=white, fonttitle=\bfseries,
+  title={Tự kiểm tra}, #1}
+
+\newtcolorbox{notebox}[1][]{
+  enhanced, breakable,
+  colback=noteorangebg, colframe=noteorange,
+  coltitle=white, fonttitle=\bfseries,
+  title={Ghi chú / Mẹo}, #1}
+
+\newtcolorbox{dangerbox}[1][]{
+  enhanced, breakable,
+  colback=dangerredbg, colframe=dangerred,
+  coltitle=white, fonttitle=\bfseries\large,
+  title={Cảnh báo / Nguy hiểm}, #1,
+  borderline={1.2pt}{0pt}{dangerred}}
+
+%% ---- Section formatting ----
+\titleformat{\section}
+  {\Large\bfseries\color{seniorblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{seniorblue!85!black}}{\thesubsection}{0.6em}{}
+
+%% ---- Header / Footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Chương 4 — Chuyển hướng \& Pipe}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ---- Verbatim helper ----
+\usepackage{fancyvrb}
+\fvset{frame=single,framesep=4pt,rulecolor=\color{coderulegray},
+       fontsize=\small,xleftmargin=4pt}
+
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+\begin{document}
+
+%% ---- Title page ----
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{seniorblue} Chương 4\par}
+\vspace{1cm}
+{\LARGE\bfseries Chuyển hướng \& Pipe --- điều khiển luồng dữ liệu\par}
+\vspace{0.5cm}
+{\large (stdin, stdout, stderr)\par}
+\vspace{2cm}
+{\large Giáo trình Linux cho người mới bắt đầu\par}
+\vfill
+{\large macOS \textbullet{} Terminal \textbullet{} Sân tập \cmd{\textasciitilde/linux-lab}\par}
+\vspace{1cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%% =========================================================
+\begin{quote}
+Ở Chương 3 bạn đã thấy dấu \cmd{>} và \cmd{>>} ghi kết quả ra file. Chương này giải thích ``bộ máy'' đằng sau: dữ liệu chảy vào và ra khỏi một lệnh như thế nào, và làm sao bạn điều khiển được dòng chảy đó. Đây là một trong những kỹ năng ``biến người dùng thường thành người dùng có nghề''.
+\end{quote}
+
+\begin{notebox}[title={Lưu ý môi trường}]
+Trên macOS hiện nay, shell mặc định là \textbf{zsh} (không phải bash). Mọi ví dụ trong chương chạy tốt trên zsh. Một vài chỗ ta sẽ chỉ rõ khi zsh và bash hành xử khác nhau, để bạn không bối rối khi thử trên máy mình.
+\end{notebox}
+
+%% =========================================================
+\section{Mục tiêu học tập}
+
+Học xong chương này, bạn sẽ:
+
+\begin{enumerate}[leftmargin=2em]
+\item Hiểu \textbf{ba luồng chuẩn}: \cmd{stdin} (đầu vào), \cmd{stdout} (đầu ra), \cmd{stderr} (lỗi) --- và vì sao lỗi lại tách riêng.
+\item \textbf{Chuyển hướng đầu ra} ra file: \cmd{>}, \cmd{>>}, \cmd{1>}.
+\item \textbf{Chuyển hướng lỗi} ra file: \cmd{2>}, \cmd{2>>}, và gộp lỗi vào chung đầu ra bằng \cmd{2>\&1} hoặc \cmd{\&>}.
+\item Dùng \textbf{\cmd{/dev/null}} (``hố đen'') để vứt bỏ thứ bạn không cần.
+\item \textbf{Chuyển hướng đầu vào} từ file bằng \cmd{<}.
+\item Dùng \textbf{pipe \cmd{|}} để nối nhiều lệnh thành ``dây chuyền xử lý''.
+\item Phân biệt rõ \textbf{pipe} (nối lệnh với lệnh) và \textbf{redirect} (nối lệnh với file).
+\item Biết các cạm bẫy production: thứ tự \cmd{2>\&1}, mã thoát của pipe, vì sao tách lỗi quan trọng khi viết log.
+\end{enumerate}
+
+%% =========================================================
+\section{Câu chuyện nền: một lệnh có ``ba cái ống''}
+
+Hãy tưởng tượng mỗi lệnh trên Terminal giống một \textbf{người công nhân} có ba cái ống nối ra ngoài:
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{stdin} (standard input --- \textit{đầu vào chuẩn}, mang \textbf{số hiệu 0}): cái \textbf{tai nghe / bàn phím}. Đây là nơi dữ liệu \textbf{đi vào} lệnh. Mặc định, nó nối tới bàn phím của bạn.
+\item \textbf{stdout} (standard output --- \textit{đầu ra chuẩn}, mang \textbf{số hiệu 1}): cái \textbf{miệng} để nói ra \textbf{kết quả}. Mặc định, nó nối ra màn hình.
+\item \textbf{stderr} (standard error --- \textit{lỗi chuẩn}, mang \textbf{số hiệu 2}): cái \textbf{còi báo lỗi} riêng. Khi có trục trặc, lệnh kêu qua còi này. Mặc định nó \textbf{cũng ra màn hình}, nhưng là \textbf{một kênh tách biệt} với stdout.
+\end{itemize}
+
+\begin{notebox}[title={Định nghĩa nhanh --- ``luồng'' (stream)}]
+là một dòng dữ liệu chảy liên tục (như nước chảy trong ống), không phải một file cố định. Ba luồng trên là ba ``ống nước'' mặc định mà hệ điều hành gắn sẵn cho mọi lệnh.
+\end{notebox}
+
+\begin{notebox}[title={Định nghĩa nhanh --- ``số hiệu'' (file descriptor)}]
+mỗi ống có một con số để gọi tên. \cmd{0} = stdin, \cmd{1} = stdout, \cmd{2} = stderr. Khi bạn gõ \cmd{2>} nghĩa là ``lấy ống số 2 (lỗi) và chuyển hướng nó''. Tên tiếng Anh có chữ \textit{file} vì với Unix, \textbf{mọi thứ --- kể cả ống dữ liệu, màn hình, bàn phím --- đều được đối xử như một dạng file}. Bạn chưa cần bận tâm điều đó; giờ chỉ cần nhớ ba con số 0/1/2.
+\end{notebox}
+
+\begin{notebox}[title={Định nghĩa nhanh --- ``tiến trình'' và ``tiến trình con'' (process / subprocess)}]
+mỗi lệnh đang chạy là một \textbf{tiến trình}. Khi shell tạo thêm một bản sao của chính nó để chạy một phần việc riêng, bản sao đó gọi là \textbf{tiến trình con}. Vì nó là một bản sao riêng biệt, các thay đổi bên trong nó (ví dụ đặt một biến) \textbf{có thể không truyền ngược ra ngoài}. Ta sẽ gặp lại khái niệm này ở Mục 10 khi nói về pipe.
+\end{notebox}
+
+\begin{notebox}[title={Chính xác hơn (không bắt buộc nhớ)}]
+cả ba luồng mặc định cùng trỏ tới \textbf{cửa sổ Terminal đang chạy} (gọi là \textit{tty}), nên ta thấy cả kết quả lẫn lỗi trên màn hình, và gõ bàn phím thì lệnh nhận được. ``Màn hình / bàn phím'' chỉ là cách hình dung trực quan. Khi lệnh chạy nền (cron, dịch vụ chạy ngầm) thì ``màn hình'' có thể không tồn tại --- lúc đó việc tách hai luồng để ghi log càng quan trọng (xem Mục 10).
+\end{notebox}
+
+\subsection{Vì sao phải tách stderr khỏi stdout?}
+
+Tưởng tượng bạn bảo công nhân: ``đếm giúp tôi số hộp hàng, rồi tôi mang con số đó đi tính tiền''. Nếu lúc đếm có sự cố (``hộp số 7 bị rách!''), bạn \textbf{không muốn} câu cảnh báo đó lẫn vào con số kết quả --- vì bạn sắp mang \textbf{kết quả} đi tính tiền tự động.
+
+Đó chính là lý do Unix tách \textbf{kết quả} (stdout) và \textbf{thông báo lỗi} (stderr) thành hai ống riêng:
+
+\begin{itemize}[leftmargin=1.4em]
+\item Bạn có thể lấy \textbf{stdout} đẩy sang lệnh khác xử lý tiếp.
+\item Còn \textbf{stderr} thì ghi riêng vào file log lỗi, hoặc hiện lên màn hình cho người vận hành thấy.
+\end{itemize}
+
+Hai luồng độc lập = không lẫn lộn. Đây là nền tảng của mọi automation (tự động hóa) sau này.
+
+\begin{checkbox}[title={Tự kiểm tra 2}]
+a) \cmd{stdin}, \cmd{stdout}, \cmd{stderr} mang số hiệu lần lượt là mấy?
+
+b) Mặc định stderr hiện ra đâu? Nó có giống stdout không?
+
+\textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+%% =========================================================
+\section{Chuyển hướng đầu ra (stdout): \texttt{>}, \texttt{>>}, \texttt{1>}}
+
+Bạn đã gặp ở Chương 3. Nhắc lại ngắn gọn:
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{10cm}}
+\rowcolor{seniorbluebg}
+\textbf{Ký hiệu} & \textbf{Ý nghĩa} \\
+\hline
+\cmd{>} & Ghi stdout ra file, \textbf{ghi đè} (xóa nội dung cũ rồi viết mới). \\
+\cmd{>>} & Ghi stdout ra file, \textbf{nối thêm} vào cuối (giữ nội dung cũ). \\
+\cmd{1>} & Giống hệt \cmd{>} --- chỉ là viết rõ ``ống số 1''. \\
+\end{tabular}
+\end{center}
+
+Vì stdout mang số hiệu \cmd{1}, nên \cmd{>} thực ra là dạng viết tắt của \cmd{1>}. Người ta hiếm khi gõ \cmd{1>} vì \cmd{>} đã đủ; nhưng hiểu điều này giúp bạn đọc được cú pháp \cmd{2>} sắp tới.
+
+\begin{Verbatim}
+echo "dong mot" > file.txt     # tao file, ghi de
+echo "dong hai" >> file.txt    # noi them dong hai
+\end{Verbatim}
+
+\begin{dangerbox}[title={Cạm bẫy}]
+\cmd{>} \textbf{xóa sạch} nội dung cũ ngay khi bạn nhấn Enter. Gõ nhầm tên file quan trọng = mất dữ liệu. Khi chưa chắc, hãy dùng \cmd{>>} (nối thêm) cho an toàn hơn.
+\end{dangerbox}
+
+%% =========================================================
+\section{Chuyển hướng lỗi (stderr): \texttt{2>}, \texttt{2>>}}
+
+Đây là điểm mới quan trọng nhất của chương.
+
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{2>} --- lấy \textbf{ống số 2 (lỗi)} và ghi ra file (ghi đè).
+\item \cmd{2>>} --- ghi lỗi ra file, nối thêm.
+\end{itemize}
+
+Mấu chốt: \cmd{>} \textbf{chỉ} chuyển hướng stdout. Nó \textbf{không} bắt được lỗi. Muốn bắt lỗi, bạn \textbf{phải} dùng \cmd{2>}.
+
+\begin{Verbatim}
+ls khong-co-thu-muc-nay 2> loi.txt
+\end{Verbatim}
+
+Lệnh trên cố liệt kê một thư mục không tồn tại. Thông báo lỗi (stderr) sẽ \textbf{không hiện trên màn hình} mà chui vào \cmd{loi.txt}.
+
+\subsection{Gộp lỗi vào chung đầu ra: \texttt{2>\&1}}
+
+Đôi khi bạn muốn \textbf{cả kết quả lẫn lỗi} vào \textbf{cùng một file}. Cú pháp:
+
+\begin{Verbatim}
+lenh > out.txt 2>&1
+\end{Verbatim}
+
+Đọc là: ``đưa stdout vào \cmd{out.txt} (\cmd{> out.txt}), rồi đưa stderr \textbf{đi theo nơi stdout đang trỏ tới} (\cmd{2>\&1})''.
+
+\begin{notebox}[title={Giải mã \texttt{2>\&1}}]
+\cmd{2>} = chuyển hướng ống số 2; \cmd{\&1} = ``tới chỗ mà ống số 1 đang trỏ''. Dấu \cmd{\&} ở đây \textbf{báo cho máy biết: con số \cmd{1} đứng sau là MỘT CÁI ỐNG (file descriptor) đang tồn tại, chứ không phải tên file tên ``1''}. Nếu thiếu dấu \cmd{\&}, máy sẽ hiểu \cmd{1} là tên file và tạo ra một file tên ``1''.
+\end{notebox}
+
+\subsection{THỨ TỰ rất quan trọng}
+
+Hai dòng dưới đây \textbf{trông giống nhau nhưng kết quả khác hẳn}:
+
+\begin{Verbatim}
+lenh > out.txt 2>&1     # DUNG: ca stdout va stderr vao out.txt
+lenh 2>&1 > out.txt     # SAI Y DO: stderr van ra man hinh
+\end{Verbatim}
+
+Vì sao? Shell đọc \textbf{từ trái sang phải}:
+
+\begin{itemize}[leftmargin=1.4em]
+\item Dòng đúng: trước hết stdout trỏ vào file; sau đó \cmd{2>\&1} bảo stderr ``đi theo stdout'' --- lúc này stdout đã ở file, nên lỗi cũng vào file.
+\item Dòng sai: \cmd{2>\&1} chạy \textbf{trước}, lúc đó stdout vẫn đang trỏ ra \textbf{màn hình}, nên stderr cũng trỏ ra màn hình. Sau đó \cmd{> out.txt} mới đổi stdout sang file --- nhưng stderr đã ``chốt'' ở màn hình rồi, không đổi theo.
+\end{itemize}
+
+Hãy nhớ câu thần chú: \textbf{``file trước, gộp sau''} --- \cmd{> out.txt 2>\&1}.
+
+\subsection{Cú pháp gọn \texttt{\&>}}
+
+zsh và bash hỗ trợ lối viết tắt:
+
+\begin{Verbatim}
+lenh &> out.txt        # gop CA stdout VA stderr vao out.txt (ghi de)
+lenh &>> out.txt       # gop ca hai, noi them
+\end{Verbatim}
+
+\cmd{\&>} tiện và dễ nhớ, nhưng nó là \textbf{mở rộng của zsh/bash}, không phải chuẩn POSIX.
+
+\begin{dangerbox}[title={Cảnh báo dành cho script}]
+Trên shell \cmd{sh}/\cmd{dash} tối giản (thường là \cmd{/bin/sh} trên server), \cmd{\&>} \textbf{không} được hiểu là ``gộp luồng''. Nó có thể bị diễn giải thành ``chạy lệnh ở chế độ nền (\cmd{\&}) rồi tạo file (\cmd{>})'' --- cho ra \textbf{kết quả sai mà không báo lỗi rõ ràng}. Vì vậy trong script bắt đầu bằng \cmd{\#!/bin/sh}, hãy \textbf{luôn} dùng dạng đầy đủ \cmd{> out.txt 2>\&1} cho chắc.
+\end{dangerbox}
+
+\begin{checkbox}[title={Tự kiểm tra 4}]
+a) Lệnh \cmd{ls /thu-muc-ao} báo lỗi. Muốn lưu lỗi đó vào \cmd{bug.txt}, bạn dùng \cmd{>} hay \cmd{2>}?
+
+b) \cmd{lenh 2>\&1 > log.txt} có gộp được lỗi vào file không? Vì sao?
+
+\textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+%% =========================================================
+\section{\texttt{/dev/null} --- cái ``hố đen'' nuốt mọi thứ}
+
+\cmd{/dev/null} là một file đặc biệt của hệ điều hành: \textbf{mọi thứ ghi vào nó đều biến mất}, không lưu lại gì. Hãy coi nó là \textbf{thùng rác không đáy} hay \textbf{hố đen}. (Chính xác hơn, đây không phải file thường mà là một \textit{thiết bị đặc biệt} --- device file --- nhưng bạn cứ hình dung nó như một file để dễ hiểu.)
+
+Dùng để làm gì? Để \textbf{vứt bỏ} thứ bạn không quan tâm.
+
+\begin{Verbatim}
+lenh 2> /dev/null          # vut bo LOI (chi giu ket qua tren man hinh)
+lenh > /dev/null           # vut bo KET QUA (chi con loi hien ra)
+lenh > /dev/null 2>&1      # vut bo TAT CA (im lang hoan toan)
+\end{Verbatim}
+
+Ví dụ thực tế: bạn chạy một lệnh dò tìm trên cả ổ đĩa, nó in ra hàng trăm dòng ``Permission denied'' (không có quyền) gây nhiễu. Thêm \cmd{2> /dev/null} để \textbf{tắt tiếng ồn} đó đi, chỉ giữ lại kết quả thật.
+
+\begin{notebox}[title={Lưu ý}]
+\cmd{/dev/null} chỉ ``nuốt'', không ``lưu''. Đừng dùng nó khi bạn còn cần xem lại nội dung sau này --- lúc đó hãy ghi ra file thật.
+\end{notebox}
+
+%% =========================================================
+\section{Chuyển hướng đầu vào (stdin): \texttt{<}}
+
+Đến giờ ta toàn nói về đầu \textbf{ra}. Còn đầu \textbf{vào} thì sao?
+
+Mặc định một lệnh nhận dữ liệu từ bàn phím. Dấu \cmd{<} bảo: ``đừng chờ bàn phím, hãy \textbf{đọc nội dung từ file này} làm đầu vào''.
+
+\begin{Verbatim}
+wc -l < ten-file.txt
+\end{Verbatim}
+
+\begin{notebox}[title={Định nghĩa nhanh --- \texttt{wc}}]
+(word count): lệnh đếm. \cmd{wc -l} đếm \textbf{số dòng} (``l'' = lines).
+\end{notebox}
+
+Khác biệt tinh tế:
+
+\begin{itemize}[leftmargin=1.4em]
+\item \cmd{wc -l ten-file.txt} --- bạn \textbf{đưa tên file} cho \cmd{wc}, \cmd{wc} tự mở file. Kết quả in kèm tên file.
+\item \cmd{wc -l < ten-file.txt} --- \textbf{shell} mở file và \textbf{rót nội dung} vào ống stdin của \cmd{wc}. \cmd{wc} không biết tên file, chỉ thấy dòng dữ liệu chảy vào. Kết quả chỉ có con số.
+\end{itemize}
+
+Với người mới, hai cách cho con số giống nhau. Nhưng hiểu \cmd{<} rất quan trọng vì nhiều lệnh \textbf{chỉ} nhận dữ liệu qua stdin, không nhận tên file.
+
+%% =========================================================
+\section{Pipe \texttt{|} --- nối các lệnh thành dây chuyền}
+
+Đây là ``ngôi sao'' của chương.
+
+\textbf{Pipe} (cái ống, ký hiệu \cmd{|}) \textbf{nối stdout của lệnh bên trái thẳng vào stdin của lệnh bên phải}. Kết quả của lệnh trước trở thành đầu vào của lệnh sau, không cần file trung gian.
+
+\begin{notebox}[title={Tìm phím \texttt{|} ở đâu?}]
+Trên đa số bàn phím kiểu Mỹ (US/ANSI), \cmd{|} nằm \textbf{cùng phím với \cmd{\textbackslash{}}} (thường ở phía trên phím Enter), gõ bằng \textbf{Shift + \cmd{\textbackslash{}}}. Nếu bàn phím của bạn dùng layout khác (ISO, UK, quốc tế\ldots), vị trí có thể khác --- hãy tìm ký tự \textbf{gạch đứng \cmd{|}} in trên mặt phím, nó thường nằm gần phím Enter hoặc dùng Shift kèm phím dấu sổ đứng.
+\end{notebox}
+
+Hình dung một \textbf{dây chuyền sản xuất}: nguyên liệu chạy qua máy 1 $\rightarrow$ ra bán thành phẩm $\rightarrow$ chạy thẳng vào máy 2 $\rightarrow$ \ldots $\rightarrow$ ra thành phẩm cuối.
+
+\begin{Verbatim}
+ls /usr/bin | wc -l
+\end{Verbatim}
+
+Đọc là: ``liệt kê mọi thứ trong \cmd{/usr/bin} (ra một danh sách dài), rồi \textbf{rót thẳng} danh sách đó vào \cmd{wc -l} để đếm số dòng''. Kết quả: một con số = số mục trong thư mục đó.
+
+\subsection{Pipe khác Redirect như thế nào?}
+
+Đây là điểm cực kỳ hay nhầm:
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}p{4.6cm} >{\raggedright\arraybackslash}p{3.6cm}}
+\rowcolor{seniorbluebg}
+& \textbf{Nối với cái gì} & \textbf{Ví dụ} \\
+\hline
+\textbf{Redirect} (\cmd{>}, \cmd{<}) & Nối lệnh với một \textbf{FILE} & \cmd{ls > out.txt} \\
+\textbf{Pipe} (\cmd{|}) & Nối lệnh với một \textbf{LỆNH khác} & \cmd{ls | wc -l} \\
+\end{tabular}
+\end{center}
+
+Câu thần chú: \textbf{\cmd{>} nói chuyện với file, \cmd{|} nói chuyện với lệnh.}
+
+\cmd{ls > wc} sẽ tạo ra một \textbf{file tên là ``wc''} (sai bét), còn \cmd{ls | wc} mới là \textbf{đưa danh sách cho lệnh wc xử lý} (đúng).
+
+\subsection{Vài lệnh hay đi cùng pipe}
+
+Chỉ giới thiệu đủ để ví dụ chạy được, ta sẽ học sâu ở chương sau:
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{\cmd{wc}} --- đếm. \cmd{wc -l} đếm dòng, \cmd{wc -w} đếm từ.
+\item \textbf{\cmd{grep tu-khoa}} --- \textbf{lọc}: chỉ giữ lại những dòng \textbf{có chứa} ``tu-khoa'' (khớp theo \textbf{chuỗi con liền mạch}, không phải ``có đủ các chữ cái đó'').
+\item \textbf{\cmd{sort}} --- sắp xếp các dòng theo thứ tự (mặc định A$\rightarrow$Z).
+\item \textbf{\cmd{head}} / \textbf{\cmd{tail}} --- lấy vài dòng \textbf{đầu} / \textbf{cuối} (bạn đã gặp ở chương trước).
+\end{itemize}
+
+Ví dụ ghép chuỗi:
+
+\begin{Verbatim}
+ls /usr/bin | sort | head -5
+\end{Verbatim}
+
+``Liệt kê $\rightarrow$ sắp xếp A$\rightarrow$Z $\rightarrow$ lấy 5 dòng đầu''. Mỗi \cmd{|} là một mắt xích trong dây chuyền.
+
+\begin{checkbox}[title={Tự kiểm tra 7}]
+a) \cmd{|} nối lệnh với \textbf{file} hay với \textbf{lệnh khác}?
+
+b) \cmd{grep loi nhat-ky.txt} làm gì?
+
+\textit{(Đáp án ở cuối chương.)}
+\end{checkbox}
+
+\begin{notebox}[title={Lưu ý nhỏ về thói quen tốt}]
+Bạn sẽ thấy nhiều người viết \cmd{cat nhat-ky.txt | grep loi}. Cách này \textbf{chạy đúng}, nhưng thực ra thừa: \cmd{grep} tự đọc được file, nên viết gọn \cmd{grep loi nhat-ky.txt} là đủ (đây gọi vui là ``dùng \cmd{cat} vô ích''). Trong chương này, khi nào ta dùng \cmd{cat ... | ...} thì chỉ là để \textbf{minh họa pipe cho dễ thấy dòng chảy dữ liệu}, chứ không phải cách gọn nhất.
+\end{notebox}
+
+%% =========================================================
+\section{THỰC HÀNH NGAY (Lab chính)}
+
+\begin{labbox}[title={Thực hành ngay --- Lab chính}]
+Mở \textbf{Terminal} trên macOS (shell mặc định là zsh). Gõ \textbf{từng dòng}, nhấn Enter, quan sát. Đừng copy cả khối --- gõ tay giúp nhớ lâu.
+\end{labbox}
+
+\begin{notebox}[title={Trấn an}]
+Kết quả trên máy bạn \textbf{có thể hơi khác} (số đếm, thứ tự dòng, ngày giờ) tùy phiên bản macOS và nội dung máy. Điều đó \textbf{hoàn toàn bình thường} --- bạn chỉ cần thấy \textbf{đúng kiểu} kết quả như mô tả.
+\end{notebox}
+
+\subsection{Bước 1 --- Tạo sân tập và vào đó}
+
+\begin{Verbatim}
+mkdir -p ~/linux-lab/ch4
+cd ~/linux-lab/ch4
+\end{Verbatim}
+
+\cmd{mkdir -p} tạo thư mục (cờ \cmd{-p} để không báo lỗi nếu đã tồn tại). \cmd{cd} để bước vào.
+
+\textbf{Kết quả mong đợi:} không có thông báo gì (im lặng = thành công). Gõ \cmd{pwd} sẽ thấy đường dẫn kết thúc bằng \cmd{/linux-lab/ch4}.
+
+\subsection{Bước 2 --- stdout chảy vào file}
+
+\begin{Verbatim}
+echo "xin chao" > ra.txt
+cat ra.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+xin chao
+\end{Verbatim}
+\cmd{echo} lẽ ra in ``xin chao'' ra màn hình, nhưng \cmd{>} đã bẻ dòng chảy đó vào \cmd{ra.txt}. \cmd{cat} đọc lại file để xác nhận.
+
+\subsection{Bước 3 --- stderr chảy vào file (lỗi KHÔNG hiện ra màn hình)}
+
+\begin{Verbatim}
+ls khong-co-file-nay 2> loi.txt
+cat loi.txt
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} Dòng \cmd{ls ...} \textbf{không in lỗi ra màn hình} (vì lỗi đã bị bẻ vào file). Khi \cmd{cat loi.txt}, bạn thấy đại loại:
+\begin{Verbatim}
+ls: khong-co-file-nay: No such file or directory
+\end{Verbatim}
+Nội dung tiếng Anh chính xác có thể hơi khác chút tùy máy --- miễn là có ``No such file or directory'' là đúng.
+
+\subsection{Bước 4 --- Nuốt lỗi bằng \texttt{/dev/null}}
+
+\begin{Verbatim}
+ls khong-co-file-nay 2> /dev/null
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} \textbf{Không thấy gì cả} --- màn hình im lặng. Lỗi đã bị ``hố đen'' \cmd{/dev/null} nuốt sạch.
+
+\textbf{Vì sao trống trơn?} Lệnh này vốn \textbf{không có kết quả thật} (nó chỉ sinh ra lỗi, không in stdout nào). Sau khi vứt lỗi đi thì màn hình trống là đúng --- khác với trường hợp một lệnh \textbf{vừa có kết quả vừa có lỗi}: lúc đó \cmd{2> /dev/null} chỉ bỏ phần lỗi và bạn vẫn thấy kết quả. (So với Bước 3: ở đó lỗi được giữ trong file; ở đây lỗi bị vứt bỏ hẳn.)
+
+\subsection{Bước 5 --- Pipe để đếm}
+
+\begin{Verbatim}
+ls /usr/bin | wc -l
+\end{Verbatim}
+
+\textbf{Kết quả mong đợi:} Một \textbf{con số} (ví dụ khoảng vài trăm đến hơn một nghìn, tùy máy --- chẳng hạn \cmd{924}). Đây là \textbf{số dòng \cmd{ls} in ra}, tức số mục trong \cmd{/usr/bin} \textbf{không tính các mục ẩn} (tên bắt đầu bằng dấu chấm \cmd{.}). \textbf{Con số trên máy bạn gần như chắc chắn khác} --- không sao, miễn là ra một số dương. (Đừng neo vào một con số cụ thể.)
+
+\subsection{Bước 6 --- Pipe vào \texttt{sort}}
+
+\begin{Verbatim}
+printf "cam\nbuoi\ntao\n" | sort
+\end{Verbatim}
+
+\cmd{printf} in văn bản; \cmd{\textbackslash n} là ký tự \textbf{xuống dòng}, nên ta tạo ra ba dòng: cam / buoi / tao. Pipe rót ba dòng đó vào \cmd{sort}.
+
+\textbf{Kết quả mong đợi (đã sắp A$\rightarrow$Z):}
+\begin{Verbatim}
+buoi
+cam
+tao
+\end{Verbatim}
+
+\subsection{Bước 7 --- Pipe vào \texttt{grep} để lọc}
+
+\begin{Verbatim}
+printf "cam\nbuoi\ntao\n" | grep ao
+\end{Verbatim}
+
+\cmd{grep ao} chỉ giữ những dòng \textbf{chứa} chuỗi ``ao''.
+
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+tao
+\end{Verbatim}
+Chỉ ``tao'' chứa ``ao''; ``cam'' và ``buoi'' bị loại.
+
+\subsection{Bước 8 --- Gộp kết quả và lỗi vào cùng một file}
+
+\begin{Verbatim}
+ls / > danhsach.txt 2>&1
+cat danhsach.txt
+\end{Verbatim}
+
+Lệnh \cmd{ls /} (liệt kê thư mục gốc) chạy trơn tru nên thường không có lỗi; nhưng cú pháp \cmd{> danhsach.txt 2>\&1} đảm bảo: \textbf{nếu} có lỗi, nó cũng vào chung file này.
+
+\textbf{Kết quả mong đợi:} \cmd{cat danhsach.txt} in ra danh sách các thư mục gốc của macOS, ví dụ:
+\begin{Verbatim}
+Applications
+Library
+System
+Users
+...
+\end{Verbatim}
+Danh sách cụ thể tùy máy --- chắc chắn có \cmd{Applications}, \cmd{Library}, \cmd{System}, \cmd{Users}.
+
+\subsection{Bước 9 --- Dọn dẹp}
+
+\begin{Verbatim}
+cd ~
+rm -ri ~/linux-lab/ch4
+\end{Verbatim}
+
+Quay về thư mục nhà (\cmd{cd \textasciitilde{}}) rồi xóa thư mục \cmd{ch4} cùng mọi thứ trong nó. Ở đây ta thêm cờ \cmd{-i} (``interactive'') để hệ thống \textbf{hỏi xác nhận từng mục} trước khi xóa --- gõ \cmd{y} rồi Enter để đồng ý. Khi đã quen tay, bạn có thể dùng \cmd{rm -r} (không hỏi) cho nhanh.
+
+\textbf{Kết quả mong đợi:} sau khi xác nhận xong, gõ \cmd{ls \textasciitilde/linux-lab} sẽ không còn thấy \cmd{ch4}.
+
+\begin{dangerbox}[title={Cẩn trọng}]
+\cmd{rm -r} (không có \cmd{-i}) xóa \textbf{không hỏi lại và không vào Thùng Rác}. Luôn nhìn kỹ đường dẫn trước khi nhấn Enter. \textbf{Tuyệt đối không} ghép \cmd{rm -r} với một biến hay dấu \cmd{*} khi bạn chưa thật chắc chắn --- đó là cách mất dữ liệu nhanh nhất. Ở đây ta ghi rõ đường dẫn tường minh \cmd{\textasciitilde/linux-lab/ch4} để khỏi xóa nhầm.
+\end{dangerbox}
+
+%% =========================================================
+\section{Bảng tóm tắt ký hiệu (in ra dán bàn)}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{9.6cm}}
+\rowcolor{seniorbluebg}
+\textbf{Ký hiệu} & \textbf{Nghĩa} \\
+\hline
+\cmd{>} & Ghi \textbf{stdout} ra file, \textbf{ghi đè} nội dung cũ. \\
+\cmd{>>} & Ghi \textbf{stdout} ra file, \textbf{nối thêm} vào cuối. \\
+\cmd{2>} & Ghi \textbf{stderr} (lỗi) ra file, ghi đè. \\
+\cmd{2>\&1} & Đưa \textbf{stderr đi theo} nơi stdout đang trỏ (gộp lỗi vào đầu ra). Nhớ: đặt \textbf{sau} \cmd{> file}. \\
+\cmd{\&>} & Gộp \textbf{cả stdout lẫn stderr} vào file (lối viết gọn của zsh/bash; \textbf{không} dùng trên \cmd{sh}/\cmd{dash}). \\
+\cmd{<} & Lấy \textbf{nội dung file} làm \textbf{stdin} (đầu vào) cho lệnh. \\
+\cmd{|} & \textbf{Pipe}: nối stdout lệnh trái vào stdin lệnh phải. \\
+\cmd{/dev/null} & ``Hố đen'' --- mọi thứ ghi vào đều biến mất. Dùng để vứt bỏ. \\
+\end{tabular}
+\end{center}
+
+%% =========================================================
+\section{Góc Senior (vì sao, production, cạm bẫy)}
+
+Phần này hé lộ tư duy của người làm DevOps thực thụ. Chưa hiểu hết cũng không sao --- đọc để ``ngấm'' dần.
+
+\begin{seniorbox}[title={Góc Senior \#1 --- Tách stderr là xương sống của log và automation}]
+Trong hệ thống thật, một dịch vụ chạy 24/7 sẽ tuôn ra rất nhiều dòng. Người ta thường tách: \textbf{kết quả/đầu ra bình thường (stdout)} đẩy vào nơi xử lý hoặc lưu trữ; \textbf{lỗi (stderr)} đẩy ra một file log riêng để cảnh báo. Ví dụ điển hình:
+\begin{Verbatim}
+./chuong-trinh > /var/log/app.out 2> /var/log/app.err
+\end{Verbatim}
+Nhờ tách kênh, đội vận hành chỉ cần ``nhìn vào file \cmd{.err}'' là biết có sự cố, không phải lọc giữa hàng triệu dòng bình thường.
+\end{seniorbox}
+
+\begin{seniorbox}[title={Góc Senior \#2 --- Cạm bẫy thứ tự \texttt{2>\&1} (gặp hoài, kể cả người có kinh nghiệm)}]
+Như mục 4: \cmd{> file 2>\&1} đúng, còn \cmd{2>\&1 > file} thì lỗi vẫn rò ra màn hình. Đây là lỗi kinh điển làm ``log thiếu mất phần lỗi'' trong các script thực tế. Thần chú: \textbf{file trước, gộp sau.}
+\end{seniorbox}
+
+\begin{seniorbox}[title={Góc Senior \#3 --- Mã thoát của pipe: \texttt{\$?} chỉ là của lệnh CUỐI}]
+\begin{notebox}[title={Định nghĩa nhanh --- mã thoát (exit code) và \texttt{\$?}}]
+sau mỗi lệnh, hệ thống lưu một con số báo lệnh thành công (\cmd{0}) hay thất bại (khác \cmd{0}). Bạn xem nó bằng \cmd{echo \$?}.
+\end{notebox}
+
+Với pipe \cmd{A | B}, biến \cmd{\$?} mặc định \textbf{chỉ phản ánh kết quả của \cmd{B}} (lệnh cuối). Nếu \cmd{A} chết giữa chừng mà \cmd{B} vẫn chạy ổn, shell vẫn báo ``thành công'' --- rất nguy hiểm trong script. Cách khắc phục (sơ lược, sẽ học kỹ sau):
+\begin{Verbatim}
+set -o pipefail
+\end{Verbatim}
+Đặt dòng này đầu script để shell coi pipe là \textbf{thất bại nếu BẤT KỲ mắt xích nào} thất bại, không chỉ mắt cuối.
+
+\begin{notebox}[title={Lưu ý portable}]
+\cmd{set -o pipefail} có trong \textbf{bash và zsh}, nhưng \textbf{không} có trong POSIX \cmd{sh} thuần (dash). Nếu script cần tính năng này, hãy khai báo \cmd{\#!/bin/bash} (hoặc \cmd{\#!/bin/zsh}) thay vì \cmd{\#!/bin/sh}; trong bash bạn cũng có thể kiểm tra mảng \cmd{\$\{PIPESTATUS[@]\}} để biết mã thoát của từng mắt xích. Đừng giả định mọi \cmd{/bin/sh} đều hỗ trợ \cmd{pipefail}.
+\end{notebox}
+\end{seniorbox}
+
+\begin{seniorbox}[title={Góc Senior \#4 --- Mỗi vế của pipe chạy trong một tiến trình con (subprocess) riêng}]
+Hai lệnh hai bên \cmd{|} chạy \textbf{đồng thời}, mỗi cái trong một tiến trình con riêng, dữ liệu chảy qua ống nối giữa chúng (lệnh bên phải đọc dữ liệu ngay khi lệnh bên trái xuất ra, và sẽ \textbf{chờ} nếu chưa có dữ liệu; lệnh bên trái cũng có thể bị chặn nếu ống đã đầy --- nên gọi ``đồng thời'' chính xác hơn ``song song độc lập''). Hệ quả thực tế: một biến bạn đặt \textbf{bên trong một vế pipe} có thể ``không sống sót'' ra ngoài.
+
+\begin{notebox}[title={Quan trọng --- kết quả tùy shell, đừng học thuộc một quy tắc tuyệt đối}]
+\begin{itemize}[leftmargin=1.4em]
+\item Trong \textbf{bash}, \textbf{mọi} vế của pipe chạy trong tiến trình con, nên biến đặt trong \textbf{bất kỳ} vế nào (kể cả vế cuối) đều \textbf{không} sống sót ra ngoài. Ví dụ kinh điển:
+\begin{Verbatim}
+x=0; printf 'a\nb\nc\n' | while read l; do x=$((x+1)); done; echo $x
+\end{Verbatim}
+bash in ra \cmd{0} (biến mất).
+\item Trong \textbf{zsh} (mặc định trên macOS của bạn), \textbf{vế CUỐI} của pipe chạy trong shell hiện tại, nên cùng đoạn trên zsh lại in ra \cmd{3} (biến \textbf{sống sót}).
+\end{itemize}
+
+Vì script production thường chạy bằng bash/sh, \textbf{đừng dựa vào} việc biến sống sót qua pipe. Điều cần nhớ: \textbf{mỗi vế pipe là một tiến trình riêng}, và kết quả cụ thể có thể khác nhau giữa các shell --- nếu thử trên máy zsh thấy biến vẫn còn thì đừng ngạc nhiên.
+\end{notebox}
+\end{seniorbox}
+
+\begin{seniorbox}[title={Góc Senior \#5 --- \texttt{/dev/null} để ``tắt ồn'' có chủ đích}]
+Vứt lỗi nhiễu vào \cmd{/dev/null} rất hữu ích, nhưng hãy \textbf{vứt có chọn lọc}. Nếu lỡ làm \cmd{lenh > /dev/null 2>\&1} cho một lệnh đang lỗi, bạn sẽ \textbf{không bao giờ biết} vì sao nó hỏng. Quy tắc: tắt ồn thì được, nhưng đừng tắt luôn cả tín hiệu báo cháy.
+\end{seniorbox}
+
+\begin{seniorbox}[title={Góc Senior \#6 --- ``Đừng phân tích đầu ra của \texttt{ls} trong script''}]
+\cmd{ls} được thiết kế cho \textbf{con người đọc}, không phải cho máy đọc. Tên file có dấu cách, ký tự lạ, xuống dòng\ldots\ sẽ làm \cmd{ls | ...} vỡ trận. Người có nghề dùng công cụ chuyên dụng (như \cmd{find}, hoặc vòng lặp glob) khi cần xử lý danh sách file bằng máy. Lưu ý: các ví dụ \cmd{ls /usr/bin | wc -l} hay \cmd{ls /etc | wc -l} trong chương này dùng \cmd{ls} để \textbf{đếm cho con người xem nhanh} thì vẫn ổn; điều cần tránh là \textbf{dựa vào từng dòng output của \cmd{ls}} để xử lý tên file bên trong script. Tư duy cốt lõi: \textbf{công cụ cho người xem $\neq$ công cụ cho máy xử lý.}
+\end{seniorbox}
+
+%% =========================================================
+\section{Hiểu lầm thường gặp (đọc kỹ để khỏi sai)}
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{``Dùng \cmd{>} cũng lưu được lỗi.''} $\rightarrow$ \textbf{SAI.} \cmd{>} chỉ bắt \textbf{stdout}. Lỗi đi qua \textbf{stderr (ống 2)}, nên \cmd{>} để mặc kệ lỗi chạy ra màn hình. Muốn lưu lỗi phải dùng \textbf{\cmd{2>}}.
+\item \textbf{``Pipe \cmd{|} và redirect \cmd{>} giống nhau.''} $\rightarrow$ \textbf{SAI.} \cmd{|} nối lệnh với \textbf{lệnh}; \cmd{>} nối lệnh với \textbf{file}. \cmd{ls > wc} tạo file tên ``wc''; \cmd{ls | wc} đưa dữ liệu cho lệnh \cmd{wc}.
+\item \textbf{``\cmd{2>\&1} đặt ở đâu cũng được.''} $\rightarrow$ \textbf{SAI.} Thứ tự quyết định kết quả. \cmd{> file 2>\&1} gộp được lỗi; \cmd{2>\&1 > file} thì không. \textbf{File trước, gộp sau.}
+\item \textbf{``\cmd{/dev/null} lưu trữ tạm dữ liệu.''} $\rightarrow$ \textbf{SAI.} Nó \textbf{nuốt và xóa} mọi thứ, không giữ lại gì.
+\item \textbf{``\cmd{grep oi} giữ mọi dòng có chữ o và chữ i.''} $\rightarrow$ \textbf{SAI.} \cmd{grep} khớp \textbf{chuỗi con liền mạch}. ``chuoi'' (ch-u-o-i) có ``o'' và ``i'' đứng liền nên khớp ``oi''; còn ``xoai'' (x-o-a-i) tuy có cả ``o'' và ``i'' nhưng chúng \textbf{không đứng liền nhau} nên \textbf{không} khớp.
+\end{itemize}
+
+%% =========================================================
+\section{Thẻ ghi nhớ (Flashcards)}
+
+Che vế phải, tự trả lời, rồi kiểm tra.
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{stdin / stdout / stderr là gì + số hiệu?} $\rightarrow$ đầu vào (0) / đầu ra (1) / lỗi (2).
+\item \textbf{\cmd{>} vs \cmd{>>}?} $\rightarrow$ ghi đè / nối thêm (đều là stdout).
+\item \textbf{Bắt lỗi ra file?} $\rightarrow$ \cmd{2>} (ghi đè), \cmd{2>>} (nối thêm).
+\item \textbf{Gộp lỗi vào chung đầu ra, đúng thứ tự?} $\rightarrow$ \cmd{lenh > out.txt 2>\&1} (file trước, gộp sau).
+\item \textbf{Viết gọn gộp cả hai?} $\rightarrow$ \cmd{\&>} (zsh/bash; không dùng trên sh/dash).
+\item \textbf{Vứt bỏ mọi thứ?} $\rightarrow$ cho vào \cmd{/dev/null}.
+\item \textbf{Im lặng hoàn toàn?} $\rightarrow$ \cmd{lenh > /dev/null 2>\&1}.
+\item \textbf{Đầu vào từ file?} $\rightarrow$ \cmd{<} (vd \cmd{wc -l < f.txt}).
+\item \textbf{Nối hai lệnh?} $\rightarrow$ pipe \cmd{|}.
+\item \textbf{Pipe vs redirect?} $\rightarrow$ \cmd{|} nối \textbf{lệnh$\leftrightarrow$lệnh}; \cmd{>} nối \textbf{lệnh$\leftrightarrow$file}.
+\item \textbf{Mã thoát của pipe?} $\rightarrow$ mặc định là của lệnh \textbf{cuối}; thêm \cmd{set -o pipefail} (bash/zsh) để bắt lỗi giữa chuỗi.
+\item \textbf{\cmd{grep} khớp kiểu gì?} $\rightarrow$ khớp \textbf{chuỗi con liền mạch}, không phải ``có đủ các chữ cái''.
+\end{itemize}
+
+%% =========================================================
+\section{Kế hoạch ôn ngắt quãng (Spaced Repetition)}
+
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Sau 1 ngày:} Mở Terminal, không nhìn sách, làm lại Bước 2, 3, 5, 6 của Lab. Tự hỏi: dùng \cmd{>} hay \cmd{2>} để bắt lỗi?
+\item \textbf{Sau 3 ngày:} Giải thích \textbf{bằng lời} (nói ra miệng) sự khác nhau giữa pipe và redirect, và vì sao \cmd{2>\&1} phải đặt sau. Làm ``Bài tập mở rộng'' số 1--3.
+\item \textbf{Sau 1 tuần:} Làm toàn bộ Bài tập mở rộng không nhìn đáp án. Vẽ lại sơ đồ ``ba cái ống'' của một lệnh từ trí nhớ. Nếu còn vấp chỗ nào, đọc lại đúng mục đó.
+\end{itemize}
+
+%% =========================================================
+\section{Tóm tắt 1 trang}
+
+\begin{itemize}[leftmargin=1.4em]
+\item Mỗi lệnh có \textbf{3 ống}: \textbf{stdin (0)} đầu vào, \textbf{stdout (1)} kết quả, \textbf{stderr (2)} lỗi. stderr tách riêng để kết quả không lẫn lỗi. (Mặc định cả ba cùng trỏ tới cửa sổ Terminal --- tty.)
+\item \textbf{Chuyển hướng stdout:} \cmd{>} ghi đè, \cmd{>>} nối thêm (\cmd{1>} = \cmd{>}).
+\item \textbf{Chuyển hướng stderr:} \cmd{2>} ghi đè, \cmd{2>>} nối thêm. \cmd{>} \textbf{không} bắt được lỗi.
+\item \textbf{Gộp lỗi vào đầu ra:} \cmd{lenh > out.txt 2>\&1} (file trước, gộp sau). Viết gọn: \cmd{\&>} (zsh/bash, không dùng trên sh).
+\item \textbf{\cmd{/dev/null}:} hố đen để vứt bỏ. Im lặng hoàn toàn: \cmd{lenh > /dev/null 2>\&1}.
+\item \textbf{Chuyển hướng stdin:} \cmd{<} rót file vào đầu vào (vd \cmd{wc -l < f.txt}).
+\item \textbf{Pipe \cmd{|}:} nối stdout lệnh trái $\rightarrow$ stdin lệnh phải, tạo dây chuyền (vd \cmd{ls | sort | head}). \cmd{grep} khớp chuỗi con liền mạch.
+\item \textbf{Pipe $\neq$ redirect:} \cmd{|} nối lệnh$\leftrightarrow$lệnh; \cmd{>} nối lệnh$\leftrightarrow$file.
+\item \textbf{Senior:} tách stderr cho log; coi chừng thứ tự \cmd{2>\&1}; \cmd{\$?} là của lệnh cuối (cần \cmd{pipefail}, có ở bash/zsh); mỗi vế pipe là tiến trình con (bash: biến không sống sót ở mọi vế; zsh: vế cuối còn sống); đừng phân tích \cmd{ls} trong script.
+\end{itemize}
+
+%% =========================================================
+\section{Bài tập mở rộng (CÓ đáp án)}
+
+Thử tự làm trước khi xem đáp án. Tạo lại sân tập nếu cần: \cmd{mkdir -p \textasciitilde/linux-lab/ch4 \&\& cd \textasciitilde/linux-lab/ch4}.
+
+\textbf{Bài 1.} Tạo file \cmd{ghichu.txt} chứa đúng hai dòng: ``hom nay'' và ``hoc bai'', dùng \cmd{>} rồi \cmd{>>}.
+
+\textbf{Bài 2.} Liệt kê một thư mục không tồn tại, vứt bỏ lỗi để màn hình im lặng (không tạo file lỗi).
+
+\textbf{Bài 3.} Đếm xem trong \cmd{/etc} có bao nhiêu mục (dùng pipe).
+
+\textbf{Bài 4.} Cho danh sách ``xoai / mit / oi / chuoi'', in ra \textbf{chỉ những dòng chứa chuỗi ``oi''}, đã sắp xếp A$\rightarrow$Z. (Gợi ý: \cmd{printf} + pipe + \cmd{grep} + \cmd{sort}.) Hãy \textbf{dự đoán} kết quả trước khi chạy --- chú ý ``oi'' phải là hai chữ đứng \textbf{liền nhau}.
+
+\textbf{Bài 5.} Chạy một lệnh sai và lưu \textbf{cả kết quả lẫn lỗi} vào \cmd{tatca.txt} bằng cú pháp \textbf{đúng thứ tự}, sau đó bằng cú pháp gọn \cmd{\&>}.
+
+\textbf{Bài 6 (suy luận).} Vì sao \cmd{cat khong-ton-tai.txt 2>\&1 > out.txt} lại \textbf{không} ghi được lỗi vào \cmd{out.txt}? Lỗi sẽ đi đâu?
+
+\subsection{Đáp án Bài tập mở rộng}
+
+\textbf{Bài 1.}
+\begin{Verbatim}
+echo "hom nay" > ghichu.txt
+echo "hoc bai" >> ghichu.txt
+cat ghichu.txt
+\end{Verbatim}
+Dùng \cmd{>} cho dòng đầu (tạo mới), \cmd{>>} cho dòng sau (nối thêm). Nếu dùng \cmd{>} cả hai lần, dòng đầu sẽ bị \textbf{ghi đè mất}.
+
+\textbf{Bài 2.}
+\begin{Verbatim}
+ls /thu-muc-khong-co 2> /dev/null
+\end{Verbatim}
+Lỗi bị \cmd{/dev/null} nuốt, màn hình im lặng, và \textbf{không} tạo file nào.
+
+\textbf{Bài 3.}
+\begin{Verbatim}
+ls /etc | wc -l
+\end{Verbatim}
+Ra một con số (tùy máy). \cmd{ls} liệt kê, pipe rót vào \cmd{wc -l} để đếm dòng.
+
+\textbf{Bài 4.}
+\begin{Verbatim}
+printf "xoai\nmit\noi\nchuoi\n" | grep oi | sort
+\end{Verbatim}
+Kết quả (đã sắp A$\rightarrow$Z):
+\begin{Verbatim}
+chuoi
+oi
+\end{Verbatim}
+Giải thích: \cmd{grep} khớp \textbf{chuỗi con liền mạch} ``oi''.
+\begin{itemize}[leftmargin=1.4em]
+\item ``oi'' --- bản thân là ``oi'', khớp.
+\item ``chuoi'' (ch-u-\textbf{o-i}) --- có ``o'' và ``i'' đứng \textbf{liền nhau} ở cuối, nên \textbf{khớp}.
+\item ``xoai'' (x-\textbf{o}-a-\textbf{i}) --- tuy có cả chữ ``o'' và ``i'' nhưng chúng \textbf{không} đứng liền nhau (bị chữ ``a'' chen vào), nên \textbf{không} khớp.
+\item ``mit'' --- không có ``oi'', bị loại.
+\end{itemize}
+Sau khi \cmd{sort} (A$\rightarrow$Z): ``chuoi'' đứng trước ``oi''. Đây là điểm dễ nhầm và là bài học quan trọng: \cmd{grep} tìm \textbf{chuỗi con}, không phải ``có chứa các chữ cái đó ở đâu cũng được''.
+
+\textbf{Bài 5.}
+\begin{Verbatim}
+ls /khong-co > tatca.txt 2>&1      # cach day du, dung thu tu
+ls /khong-co &> tatca.txt          # cach gon (zsh/bash)
+cat tatca.txt
+\end{Verbatim}
+Cả hai đều đưa kết quả lẫn lỗi vào \cmd{tatca.txt}. (Nhớ: \cmd{\&>} chỉ dùng trên zsh/bash, không dùng trong script \cmd{\#!/bin/sh}.)
+
+\textbf{Bài 6.}
+Vì shell đọc \textbf{trái sang phải}. Khi gặp \cmd{2>\&1}, stdout lúc đó \textbf{vẫn đang trỏ ra màn hình}, nên stderr cũng được gắn ra \textbf{màn hình}. Mãi sau \cmd{> out.txt} mới đổi stdout sang file, nhưng stderr đã ``chốt'' ở màn hình. Kết quả: \textbf{lỗi hiện ra màn hình}, còn \cmd{out.txt} chỉ chứa stdout (ở đây rỗng vì lệnh chỉ sinh lỗi). Muốn đúng: \cmd{cat khong-ton-tai.txt > out.txt 2>\&1}.
+
+\subsection{Đáp án phần ``Tự kiểm tra''}
+
+\textbf{Tự kiểm tra 2.}
+
+a) stdin = \textbf{0}, stdout = \textbf{1}, stderr = \textbf{2}.
+
+b) Mặc định stderr \textbf{cũng hiện ra màn hình}, \textbf{giống chỗ hiển thị} của stdout (cả hai cùng trỏ tới cửa sổ Terminal --- tty), nhưng là \textbf{kênh tách biệt} --- nên ta có thể chuyển hướng riêng (\cmd{2>}) mà không đụng tới stdout.
+
+\textbf{Tự kiểm tra 4.}
+
+a) Dùng \textbf{\cmd{2>}} (lỗi đi qua stderr, ống số 2). \cmd{>} sẽ không bắt được.
+
+b) \textbf{Không.} Vì \cmd{2>\&1} đứng \textbf{trước} \cmd{> log.txt}, nên lúc gộp, stdout còn trỏ ra màn hình $\rightarrow$ stderr cũng ra màn hình. Phải viết \cmd{lenh > log.txt 2>\&1}.
+
+\textbf{Tự kiểm tra 7.}
+
+a) \cmd{|} nối lệnh với \textbf{một lệnh khác} (không phải file).
+
+b) \cmd{grep loi nhat-ky.txt} đọc nội dung file \cmd{nhat-ky.txt} và \textbf{lọc} chỉ giữ lại những \textbf{dòng có chứa chuỗi ``loi''}. (\cmd{grep} tự đọc file nên không cần \cmd{cat}; nếu muốn minh họa pipe, có thể viết \cmd{cat nhat-ky.txt | grep loi} --- cùng kết quả nhưng dài hơn.)
+
+\end{document}

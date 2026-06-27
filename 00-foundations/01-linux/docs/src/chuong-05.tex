@@ -1,0 +1,1269 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+
+\usepackage{fontspec}
+\setmainfont{lmroman10-regular.otf}[
+  BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf,
+  BoldItalicFont=lmroman10-bolditalic.otf]
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmono10-italic.otf]
+
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+\setotherlanguage{english}
+
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  urlcolor=blue!55!black,
+  pdftitle={Chuong 5: Nguoi dung va phan quyen},
+  pdfauthor={Tai lieu Linux/DevOps}
+}
+
+% ---------- Mau ----------
+\definecolor{labcolor}{HTML}{1B6CA8}
+\definecolor{labbg}{HTML}{EAF3FA}
+\definecolor{seniorcolor}{HTML}{6B4FA0}
+\definecolor{seniorbg}{HTML}{F1ECF9}
+\definecolor{checkcolor}{HTML}{1F8A52}
+\definecolor{checkbg}{HTML}{E8F6EE}
+\definecolor{notecolor}{HTML}{C77C00}
+\definecolor{notebg}{HTML}{FBF2E0}
+\definecolor{warncolor}{HTML}{B3261E}
+\definecolor{warnbg}{HTML}{FBE9E7}
+\definecolor{headrule}{HTML}{888888}
+\definecolor{tablehead}{HTML}{D9E6F2}
+
+% ---------- Tieu de muc ----------
+\titleformat{\section}
+  {\Large\bfseries\color{labcolor!80!black}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{seniorcolor!75!black}}{\thesubsection}{0.6em}{}
+
+% ---------- Header/Footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead[L]{\small\itshape Chương 5 — Người dùng \& phân quyền}
+\fancyhead[R]{\small\thepage}
+
+% ---------- Verbatim style ----------
+\fvset{fontsize=\small,frame=single,framesep=4pt,rulecolor=\color{headrule},xleftmargin=4pt,xrightmargin=4pt}
+
+% ---------- Cac hop tcolorbox ----------
+\newtcolorbox{labbox}[1][Thực hành ngay]{
+  enhanced, breakable,
+  colback=labbg, colframe=labcolor,
+  coltitle=white, fonttitle=\bfseries,
+  title={#1}, left=3mm, right=3mm, top=2mm, bottom=2mm,
+  boxrule=0.8pt, arc=2mm}
+
+\newtcolorbox{seniorbox}[1][Góc Senior]{
+  enhanced, breakable,
+  colback=seniorbg, colframe=seniorcolor,
+  coltitle=white, fonttitle=\bfseries,
+  title={#1}, left=3mm, right=3mm, top=2mm, bottom=2mm,
+  boxrule=0.8pt, arc=2mm}
+
+\newtcolorbox{checkbox}[1][Tự kiểm tra]{
+  enhanced, breakable,
+  colback=checkbg, colframe=checkcolor,
+  coltitle=white, fonttitle=\bfseries,
+  title={#1}, left=3mm, right=3mm, top=2mm, bottom=2mm,
+  boxrule=0.8pt, arc=2mm}
+
+\newtcolorbox{notebox}[1][Ghi chú]{
+  enhanced, breakable,
+  colback=notebg, colframe=notecolor,
+  coltitle=white, fonttitle=\bfseries,
+  title={#1}, left=3mm, right=3mm, top=2mm, bottom=2mm,
+  boxrule=0.8pt, arc=2mm}
+
+\newtcolorbox{warnbox}[1][Cảnh báo]{
+  enhanced, breakable,
+  colback=warnbg, colframe=warncolor,
+  coltitle=white, fonttitle=\bfseries,
+  title={#1}, left=3mm, right=3mm, top=2mm, bottom=2mm,
+  boxrule=1pt, arc=2mm}
+
+\setlist[itemize]{leftmargin=1.4em,topsep=2pt,itemsep=2pt}
+\setlist[enumerate]{leftmargin=1.6em,topsep=2pt,itemsep=2pt}
+
+\newcommand{\cmd}[1]{\texttt{#1}}
+
+\begin{document}
+
+% ================= TRANG TIEU DE =================
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{labcolor!80!black} Chương 5\par}
+\vspace{1cm}
+{\LARGE\bfseries Người dùng \& phân quyền\par}
+\vspace{0.4cm}
+{\Large ai được làm gì (\texttt{chmod}, \texttt{sudo})\par}
+\vspace{2cm}
+\begin{tcolorbox}[colback=labbg,colframe=labcolor,width=0.85\textwidth,arc=3mm,boxrule=0.8pt]
+\itshape
+Nối tiếp Chương 1--4: bạn đã biết \cmd{cd}, \cmd{ls}, \cmd{file}, chuyển hướng
+(\cmd{>}), đường ống (\cmd{|}), và đã từng nhìn thấy cột quyền lạ lạ kiểu
+\cmd{-rw-r-{}-r-{}-} khi gõ \cmd{ls -l}. Chương này sẽ giải mã đúng cái cột đó,
+và dạy bạn cách thay đổi ``ai được làm gì'' với file của mình.
+\end{tcolorbox}
+\vfill
+{\large Tài liệu học Linux / DevOps cho người mới\par}
+\vspace{0.5cm}
+{\small Thực hành trên macOS (shell \texttt{zsh})\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ================= 1. MUC TIEU =================
+\section{Mục tiêu học tập}
+
+Học xong chương này, bạn sẽ:
+
+\begin{enumerate}
+\item Hiểu vì sao Linux/Unix (và macOS) là hệ \textbf{đa người dùng}, và vì sao
+  điều đó bắt buộc phải có \textbf{phân quyền}.
+\item Biết mình \textbf{là ai} trên máy: dùng \cmd{whoami}, \cmd{id}, \cmd{groups}.
+\item \textbf{Đọc trôi chảy} chuỗi 10 ký tự quyền trong \cmd{ls -l} (ví dụ
+  \cmd{-rwxr-xr-{}-}), phân biệt quyền của \textbf{chủ sở hữu (owner)} /
+  \textbf{nhóm (group)} / \textbf{người khác (others)}.
+\item Hiểu ý nghĩa \textbf{r (đọc)}, \textbf{w (ghi)}, \textbf{x (thực thi)} --- và
+  đặc biệt vì sao \cmd{x} trên \textbf{file} khác \cmd{x} trên \textbf{thư mục}.
+\item Dùng \cmd{chmod} thành thạo theo \textbf{2 cách}: ký hiệu (\cmd{u+x}) và số
+  (\cmd{755}, \cmd{644}, \cmd{600}).
+\item Biết sơ về \cmd{chown}/\cmd{chgrp} (đổi chủ/nhóm) và sự khác biệt trên macOS.
+\item Hiểu \cmd{sudo} là gì, khi nào cần, vì sao \textbf{nguy hiểm nếu lạm dụng},
+  và khác \cmd{su} ra sao.
+\item Nắm tư duy \textbf{least privilege (đặc quyền tối thiểu)} --- nền tảng bảo
+  mật của mọi DevOps/Senior.
+\end{enumerate}
+
+\begin{notebox}[Trấn an]
+Toàn bộ phần thực hành ở chương này \textbf{không dùng \cmd{sudo}}, \textbf{không
+đụng file hệ thống}. Bạn chỉ nghịch trong sân tập \cmd{\textasciitilde/linux-lab}.
+An toàn tuyệt đối, có lỡ gõ sai cũng không hỏng máy.
+\end{notebox}
+
+% ================= 2. VI SAO CAN PHAN QUYEN =================
+\section{Vì sao cần phân quyền? (câu chuyện đa người dùng)}
+
+Hãy tưởng tượng một \textbf{văn phòng dùng chung}: nhiều người ngồi chung, mỗi
+người có một ngăn tủ khóa riêng. Bạn không muốn đồng nghiệp mở tủ bạn lấy đồ, và
+sếp (người có chìa khóa tổng) thì mở được mọi tủ khi cần.
+
+Unix/Linux sinh ra trong môi trường y hệt: \textbf{một máy chủ, nhiều người dùng}
+đăng nhập cùng lúc, chạy nhiều tiến trình (chương trình đang chạy) song song. Để
+mọi người không giẫm chân/đọc trộm/xóa nhầm của nhau, hệ điều hành gán cho
+\textbf{mỗi file và thư mục} một bộ quy tắc: \textit{ai được đọc, ai được sửa, ai
+được chạy}.
+
+macOS kế thừa nguyên vẹn triết lý này (vì macOS có lõi Unix BSD). Dù máy bạn chỉ có
+một mình bạn dùng, hệ điều hành vẫn âm thầm chạy hàng chục \textbf{tài khoản hệ
+thống} (cho tiến trình nền) --- nên phân quyền vẫn hoạt động đầy đủ.
+
+\textbf{Ba ``vai'' cần nhớ} với mỗi file:
+
+\begin{center}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{3.2cm}|>{\raggedright\arraybackslash}p{3.8cm}|>{\raggedright\arraybackslash}p{5.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Vai} & \textbf{Tiếng Anh} & \textbf{Là ai} \\
+\hline
+Chủ sở hữu & \textbf{owner} (hay \textit{user}) & Người tạo/sở hữu file \\
+\hline
+Nhóm & \textbf{group} & Một nhóm tài khoản; file thuộc về 1 nhóm \\
+\hline
+Người khác & \textbf{others} & Tất cả những ai còn lại \\
+\hline
+\end{tabular}
+\end{center}
+
+Và trên đỉnh kim tự tháp là \textbf{root} (còn gọi \textbf{superuser} --- siêu người
+dùng): tài khoản có \textbf{quyền tối cao}, làm được mọi thứ, bỏ qua mọi rào quyền.
+(Ta sẽ gặp root khi nói về \cmd{sudo} ở mục 9.)
+
+\begin{notebox}[Định nghĩa nhanh]
+\begin{itemize}
+\item \textbf{uid} = User ID = số định danh người dùng (vd root luôn là uid \cmd{0}).
+\item \textbf{gid} = Group ID = số định danh nhóm.
+\item \textbf{tiến trình (process)} = một chương trình đang chạy.
+\end{itemize}
+\end{notebox}
+
+\begin{checkbox}[Tự kiểm tra 5.1]
+\begin{enumerate}
+\item Ba ``vai'' quyền của một file là gì?
+\item root có gì đặc biệt?
+\item Vì sao máy cá nhân (chỉ mình bạn) vẫn cần phân quyền?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 3. LAB A =================
+\section{Thực hành ngay (lab A): Tôi là ai trên máy này?}
+
+Mở \textbf{Terminal} (ứng dụng Terminal trên macOS, shell \cmd{zsh}). Gõ từng dòng,
+nhấn Enter sau mỗi dòng.
+
+\begin{labbox}[Lab A --- Nhận diện danh tính]
+\begin{Verbatim}
+whoami
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} in ra \textbf{tên đăng nhập} của bạn, ví dụ:
+\begin{Verbatim}
+vinh
+\end{Verbatim}
+
+\begin{Verbatim}
+id
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} một dòng dài chứa uid, gid và danh sách nhóm, ví dụ:
+\begin{Verbatim}
+uid=501(vinh) gid=20(staff) groups=20(staff),12(everyone),61(localaccounts),...
+\end{Verbatim}
+\begin{itemize}
+\item \cmd{uid=501(vinh)}: bạn là người dùng số 501, tên \cmd{vinh}. (Trên macOS,
+  tài khoản người đầu tiên thường bắt đầu từ \textbf{501}.)
+\item \cmd{gid=20(staff)}: nhóm chính (primary group) \textbf{của phiên làm việc
+  hiện tại} là \textbf{staff} (số 20). Đây là điểm \textbf{đặc trưng của macOS} ---
+  trên Linux, nhóm chính thường trùng tên người dùng.
+\item \cmd{groups=...}: tất cả các nhóm bạn thuộc về.
+\end{itemize}
+
+\begin{Verbatim}
+groups
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} liệt kê tên các nhóm, ví dụ:
+\begin{Verbatim}
+staff everyone localaccounts ...
+\end{Verbatim}
+\end{labbox}
+
+\begin{notebox}[Máy bạn có thể khác]
+Tên đăng nhập, số uid, và danh sách nhóm sẽ khác --- đó là bình thường. Quan trọng
+là bạn thấy được \textbf{3 lệnh này trả lời câu ``tôi là ai''} như thế nào. Nếu bạn
+là tài khoản đầu tiên trên Mac, gần như chắc chắn nhóm chính là \cmd{staff}.
+\end{notebox}
+
+\begin{notebox}[Góc thuật ngữ]
+\cmd{whoami} = ``who am I'' (tôi là ai). \cmd{id} = identity (danh tính). Dễ nhớ.
+\end{notebox}
+
+\begin{checkbox}[Tự kiểm tra 5.2]
+\begin{enumerate}
+\item Lệnh nào cho biết \textbf{tên đăng nhập} của bạn?
+\item Trong \cmd{id}, \cmd{uid} và \cmd{gid} khác nhau ở chỗ nào?
+\item Nhóm chính mặc định trên macOS thường tên là gì?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 4. DOC COT QUYEN =================
+\section{Đọc cột quyền trong \texttt{ls -l} (giải mã 10 ký tự)}
+
+Đây là kỹ năng \textbf{quan trọng nhất} của chương. Khi gõ \cmd{ls -l}, mỗi dòng bắt
+đầu bằng một chuỗi \textbf{10 ký tự}, ví dụ:
+
+\begin{Verbatim}
+-rwxr-xr--
+\end{Verbatim}
+
+Ta chia nó thành \textbf{1 + 3 + 3 + 3}:
+
+\begin{Verbatim}
+ -        rwx        r-x        r--
+ ^         ^          ^          ^
+loai    owner      group      others
+file   (chu)      (nhom)    (nguoi khac)
+\end{Verbatim}
+
+\subsection{Ký tự đầu tiên: loại đối tượng}
+
+\begin{center}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{9cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Ký tự} & \textbf{Nghĩa} \\
+\hline
+\cmd{-} & file thường (regular file) \\
+\hline
+\cmd{d} & thư mục (\textbf{d}irectory) \\
+\hline
+\cmd{l} & liên kết tượng trưng (\textbf{l}ink --- như ``shortcut'') \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{notebox}[Còn vài loại khác ít gặp]
+\cmd{c} và \cmd{b} (thiết bị --- character/block device), \cmd{p} (named pipe/FIFO),
+\cmd{s} (socket). Khi mới học bạn gần như không gặp; chỉ cần biết tên để không bất
+ngờ khi sau này thấy chúng ở các thư mục hệ thống.
+\end{notebox}
+
+\begin{notebox}[Đặc trưng macOS --- dấu \texttt{@} và \texttt{+}]
+Trên macOS bạn có thể thấy thêm một dấu ngay \textbf{sau} 10 ký tự, ví dụ
+\cmd{-rw-r-{}-r-{}-@}. Dấu \cmd{@} nghĩa là file có \textbf{thuộc tính mở rộng
+(extended attributes)} --- KHÔNG phải quyền r/w/x, cứ bỏ qua khi mới học (muốn xem
+chi tiết: \cmd{xattr -l tenfile}). Dấu \cmd{+} (nếu thấy) nghĩa là file có
+\textbf{ACL} (danh sách quyền chi tiết hơn). Cả hai đều không ảnh hưởng tới bài học
+về r/w/x.
+\end{notebox}
+
+\subsection{Ba cụm \texttt{rwx}: quyền cho từng vai}
+
+Mỗi cụm có \textbf{3 vị trí cố định}: \cmd{r} rồi \cmd{w} rồi \cmd{x}. Nếu có quyền
+thì hiện chữ, không có thì hiện dấu \cmd{-}.
+
+\begin{center}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{6cm}|c|}
+\hline
+\rowcolor{tablehead}\textbf{Chữ} & \textbf{Tên} & \textbf{Giá trị số} \\
+\hline
+\cmd{r} & \textbf{read} --- đọc & \textbf{4} \\
+\hline
+\cmd{w} & \textbf{write} --- ghi/sửa & \textbf{2} \\
+\hline
+\cmd{x} & e\textbf{x}ecute --- thực thi & \textbf{1} \\
+\hline
+\cmd{-} & không có quyền đó & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+Ví dụ giải mã \cmd{-rwxr-xr-{}-}:
+
+\begin{center}
+\begin{tabular}{|c|c|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Cụm} & \textbf{Ký tự} & \textbf{Nghĩa} \\
+\hline
+Loại & \cmd{-} & file thường \\
+\hline
+owner & \cmd{rwx} & chủ đọc + ghi + chạy được \\
+\hline
+group & \cmd{r-x} & nhóm đọc + chạy được, KHÔNG sửa được \\
+\hline
+others & \cmd{r-{}-} & người khác CHỈ đọc được \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{x} trên FILE khác \texttt{x} trên THƯ MỤC --- đừng nhầm!}
+
+Đây là chỗ người mới hay rối:
+
+\begin{itemize}
+\item \textbf{\cmd{x} trên một FILE} = ``file này \textbf{chạy được} như một
+  chương trình/script''. Không có \cmd{x} thì dù file là script đúng, hệ thống vẫn
+  \textbf{từ chối chạy}.
+\item \textbf{\cmd{x} trên một THƯ MỤC} = ``được phép \textbf{đi vào} (cd) thư mục đó
+  và truy cập file bên trong''. Một thư mục có \cmd{r} nhưng không có \cmd{x} thì bạn
+  \textbf{liệt kê được tên file nhưng không vào được}.
+\end{itemize}
+
+\begin{notebox}[Ghi nhớ một câu]
+Với thư mục, \cmd{x} nghĩa là \textit{``được bước qua cửa''}; với file, \cmd{x}
+nghĩa là \textit{``được khởi động nó''}.
+\end{notebox}
+
+\begin{checkbox}[Tự kiểm tra 5.3]
+\begin{enumerate}
+\item Trong \cmd{-rw-r-{}-r-{}-}, \textbf{owner} có những quyền nào? \textbf{others}
+  có quyền gì?
+\item \cmd{r=?}, \cmd{w=?}, \cmd{x=?} (giá trị số).
+\item Một thư mục có quyền \cmd{r} nhưng thiếu \cmd{x} thì bạn làm được gì và không
+  làm được gì?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 5. LAB B =================
+\section{Thực hành ngay (lab B): Quyền \texttt{x} ``sống động'' --- chạy một script}
+
+Giờ ta sẽ tận mắt thấy quyền \cmd{x} quyết định ``chạy được hay không''. \textbf{Gõ
+tay} từng dòng.
+
+\begin{labbox}[Lab B --- Bước 1: Tạo sân tập]
+\begin{Verbatim}
+mkdir -p ~/linux-lab/ch5
+cd ~/linux-lab/ch5
+\end{Verbatim}
+\begin{itemize}
+\item \cmd{mkdir -p}: tạo thư mục (cờ \cmd{-p} = tạo cả thư mục cha nếu chưa có, và
+  không báo lỗi nếu đã tồn tại).
+\item \cmd{cd}: vào thư mục đó.
+\end{itemize}
+\textbf{Kết quả mong đợi:} không in gì ra cả (im lặng = thành công). Kiểm chứng bằng:
+\begin{Verbatim}
+pwd
+\end{Verbatim}
+in ra đường dẫn, ví dụ \cmd{/Users/vinh/linux-lab/ch5}.
+\end{labbox}
+
+\begin{labbox}[Lab B --- Bước 2: Tạo một script nhỏ]
+\begin{Verbatim}
+echo 'echo "xin chao tu script"' > chao.sh
+ls -l chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi (trên macOS, chú ý dấu \texttt{@}):}
+\begin{Verbatim}
+-rw-r--r--@  1 vinh  staff  26 Jun 26 10:00 chao.sh
+\end{Verbatim}
+Đọc dòng này: cột đầu là \textbf{quyền}; sau quyền là \textbf{số liên kết}
+(\cmd{1}); rồi \textbf{tên chủ sở hữu} (\cmd{vinh}); rồi \textbf{nhóm của file}
+(\cmd{staff}); rồi \textbf{số byte}, ngày giờ, và tên file.
+
+Nhìn cụm quyền: \cmd{-rw-r-{}-r-{}-}. Owner đọc+ghi, group đọc, others đọc.
+\textbf{Không hề có \cmd{x} ở đâu cả} --- nghĩa là file này chưa ``chạy được''.
+\end{labbox}
+
+\begin{notebox}[Máy bạn có thể khác --- đọc kỹ để khỏi hoang mang]
+\begin{itemize}
+\item \textbf{Dấu \cmd{@}:} Trên macOS hiện đại, file tạo bằng \cmd{echo ... > file}
+  gần như luôn nhận một thuộc tính mở rộng (vd \cmd{com.apple.provenance}), nên
+  \cmd{ls -l} hiển thị dấu \cmd{@} ngay sau cụm quyền (\cmd{-rw-r-{}-r-{}-@}). Đây
+  là \textbf{bình thường}, dấu \cmd{@} KHÔNG phải quyền và không ảnh hưởng gì tới
+  r/w/x. Nếu máy bạn không có \cmd{@} cũng không sao.
+\item \textbf{Cột group (\cmd{staff} hay \cmd{wheel}?):} Cột thứ tư có thể hiển thị
+  \cmd{staff} HOẶC \cmd{wheel} --- tùy thư mục bạn đang đứng. macOS (lõi BSD) cho
+  file mới \textbf{kế thừa nhóm của thư mục cha}, nên ở \cmd{\textasciitilde/linux-lab}
+  thường là \cmd{staff}, còn ở vài nơi khác (vd \cmd{/tmp}) lại là \cmd{wheel}. Cả
+  hai đều bình thường, không ảnh hưởng bài học.
+\item \textbf{Số byte} (vd \cmd{26}), \textbf{ngày giờ}, \textbf{tên đăng nhập}
+  đương nhiên khác. Phần cụm quyền \cmd{-rw-r-{}-r-{}-} thì gần như chắc chắn giống
+  --- đó là quyền mặc định cho file mới tạo.
+\end{itemize}
+\end{notebox}
+
+\begin{labbox}[Lab B --- Bước 3: Thử chạy khi CHƯA có \texttt{x}]
+\begin{Verbatim}
+./chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} bị từ chối, báo đại loại:
+\begin{Verbatim}
+zsh: permission denied: ./chao.sh
+\end{Verbatim}
+\textbf{Lưu ý máy bạn có thể khác:} phần tiền tố trước có thể là \cmd{zsh:} hoặc
+\cmd{(eval):1:} tùy cấu hình shell --- không sao. Nếu bạn lỡ dùng \cmd{bash} thay vì
+\cmd{zsh}, thông báo sẽ hơi khác: \cmd{bash: ./chao.sh: Permission denied} --- ý
+nghĩa giống hệt.
+
+Đây chính là minh họa \textbf{sống động}: file nội dung đúng, nhưng thiếu quyền
+\cmd{x} nên hệ thống \textbf{không cho chạy}. (\cmd{./} nghĩa là ``file nằm ngay
+trong thư mục hiện tại''.)
+\end{labbox}
+
+\begin{labbox}[Lab B --- Bước 4: Thêm quyền \texttt{x} cho owner, rồi chạy lại]
+\begin{Verbatim}
+chmod u+x chao.sh
+ls -l chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} giờ có \cmd{x} ở cụm owner:
+\begin{Verbatim}
+-rwxr--r--@  1 vinh  staff  26 Jun 26 10:00 chao.sh
+\end{Verbatim}
+Chạy lại:
+\begin{Verbatim}
+./chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+xin chao tu script
+\end{Verbatim}
+
+Bạn vừa chứng kiến: \textbf{chỉ cần thêm một chữ \cmd{x}, file từ ``không chạy được''
+thành ``chạy được''}. Đó là sức mạnh của phân quyền.
+\end{labbox}
+
+\begin{notebox}[Giải thích \texttt{chmod u+x}]
+\cmd{chmod} = \textit{change mode} (đổi quyền). \cmd{u} = user/owner. \cmd{+x} = thêm
+quyền execute. Đọc liền: ``thêm quyền chạy cho chủ sở hữu''.
+\end{notebox}
+
+\begin{notebox}[Vì sao script này chạy được]
+Script chạy được là nhờ shell hiện tại (\cmd{zsh}) tự diễn giải nội dung. Ở chương
+sau bạn sẽ học thêm dòng đầu \cmd{\#!/bin/sh} (gọi là \textbf{shebang}) để chỉ định
+rõ trình thông dịch cho script --- khi đó file có thể chạy độc lập, không phụ thuộc
+shell đang dùng.
+\end{notebox}
+
+\begin{checkbox}[Tự kiểm tra 5.4]
+\begin{enumerate}
+\item Vì sao lần đầu \cmd{./chao.sh} báo \cmd{permission denied}?
+\item \cmd{chmod u+x chao.sh} làm gì?
+\item \cmd{./} ở đầu lệnh nghĩa là gì?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 6. CHMOD =================
+\section{\texttt{chmod} --- hai cách đổi quyền}
+
+\subsection{Cách KÝ HIỆU (symbolic) --- dễ đọc cho người}
+
+Cú pháp: \cmd{chmod [ai][+/-/=][quyền] file}
+
+\textbf{Phần ``ai'':}
+
+\begin{center}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{8cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Ký tự} & \textbf{Nghĩa} \\
+\hline
+\cmd{u} & user/owner (chủ) \\
+\hline
+\cmd{g} & group (nhóm) \\
+\hline
+\cmd{o} & others (người khác) \\
+\hline
+\cmd{a} & all (cả ba --- all) \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Phần ``phép toán'':}
+
+\begin{center}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{8cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Dấu} & \textbf{Nghĩa} \\
+\hline
+\cmd{+} & thêm quyền (cộng dồn vào quyền hiện có) \\
+\hline
+\cmd{-} & bớt quyền \\
+\hline
+\cmd{=} & \textbf{đặt đúng bằng} (xóa các quyền khác không liệt kê) \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{notebox}[Phân biệt quan trọng \texttt{+} và \texttt{=}]
+\cmd{+x} chỉ \textbf{thêm} quyền \cmd{x}, KHÔNG đụng tới \cmd{r}/\cmd{w} đang có. Còn
+\cmd{=} \textbf{đặt tuyệt đối}: \cmd{g=r} nghĩa là group chỉ còn đúng \cmd{r}, mọi
+quyền khác của group (kể cả \cmd{w} nếu đang có) bị xóa. Khi muốn \textbf{chắc chắn
+khóa} một quyền của ai đó, dùng \cmd{=} (hoặc cách số), đừng dùng \cmd{+}.
+\end{notebox}
+
+\textbf{Ví dụ:}
+\begin{Verbatim}
+chmod u+x file      # them thuc thi cho chu (khong dung quyen khac)
+chmod go-w file     # bo quyen ghi cua group VA others
+chmod a+r file      # cho tat ca doc duoc
+chmod o= file       # xoa sach moi quyen cua others
+\end{Verbatim}
+
+\subsection{Cách SỐ (numeric / octal) --- gọn cho dân quen}
+
+\begin{notebox}[Thuật ngữ]
+\textit{octal} = hệ \textbf{bát phân}, mỗi chữ số chạy từ \textbf{0 đến 7}. Hệ này
+vừa khít với quyền vì mỗi vai chỉ có 3 quyền \cmd{r/w/x} (tối đa \cmd{4+2+1 = 7}).
+\end{notebox}
+
+Mỗi vai là một \textbf{chữ số} = tổng của \cmd{r(4) + w(2) + x(1)}:
+
+\begin{center}
+\begin{tabular}{|c|c|>{\raggedright\arraybackslash}p{6cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Số} & \textbf{Quyền} & \textbf{Nghĩa} \\
+\hline
+7 & \cmd{rwx} & đọc + ghi + chạy (4+2+1) \\
+\hline
+6 & \cmd{rw-} & đọc + ghi (4+2) \\
+\hline
+5 & \cmd{r-x} & đọc + chạy (4+1) \\
+\hline
+4 & \cmd{r-{}-} & chỉ đọc \\
+\hline
+0 & \cmd{-{}-{}-} & không có gì \\
+\hline
+\end{tabular}
+\end{center}
+
+Một lệnh \cmd{chmod} số gồm \textbf{3 chữ số}: owner, group, others --- theo đúng
+thứ tự.
+
+\textbf{Ba con số ``quốc dân'' phải thuộc lòng:}
+
+\begin{center}
+\begin{tabular}{|c|c|>{\raggedright\arraybackslash}p{7.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Lệnh} & \textbf{Quyền} & \textbf{Dùng cho} \\
+\hline
+\cmd{chmod 755} & \cmd{rwxr-xr-x} & \textbf{script \& thư mục cần cho người khác
+truy cập}: chủ làm tất, người khác đọc/chạy/vào được \\
+\hline
+\cmd{chmod 644} & \cmd{rw-r-{}-r-{}-} & \textbf{file thường}: chủ sửa, người khác
+chỉ đọc \\
+\hline
+\cmd{chmod 600} & \cmd{rw-{}-{}-{}-{}-{}-} & \textbf{file riêng tư} (vd khóa SSH):
+chỉ mình chủ đọc/ghi \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{notebox}[Mẹo nhẩm]
+755 = ``7 cho mình, 5-5 cho thiên hạ''. 644 = ``6 cho mình, 4-4 cho thiên hạ''.
+600 = ``6 cho mình, 0-0 cho thiên hạ'' (khóa kín).
+\end{notebox}
+
+\begin{warnbox}[Đừng ``cứ 755 cho mọi thứ'']
+755 hợp với script và thư mục \textbf{cần} cho người khác vào. Nhưng với thư
+mục/dữ liệu \textbf{riêng tư}, theo tư duy least privilege (mục 10) bạn nên cân nhắc
+\cmd{700} (chỉ mình bạn), \cmd{750} (mình + nhóm đọc/vào), hay \cmd{600} cho file
+riêng. Cấp đúng mức tối thiểu cần dùng, không cấp dư.
+\end{warnbox}
+
+\begin{checkbox}[Tự kiểm tra 5.5]
+\begin{enumerate}
+\item \cmd{chmod go-w abc} làm gì?
+\item Số \cmd{5} tương ứng quyền nào? \cmd{6}? \cmd{7}?
+\item \cmd{chmod 600} cho ra chuỗi quyền nào, và phù hợp với loại file gì?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 7. LAB C =================
+\section{Thực hành ngay (lab C): File riêng tư + so sánh hai cách}
+
+Vẫn đang ở \cmd{\textasciitilde/linux-lab/ch5}. (Nếu lỡ thoát, gõ lại
+\cmd{cd \textasciitilde/linux-lab/ch5}.)
+
+\begin{labbox}[Lab C --- Bước 1: File riêng tư với \texttt{600}]
+\begin{Verbatim}
+echo "rieng tu" > bi-mat.txt
+chmod 600 bi-mat.txt
+ls -l bi-mat.txt
+\end{Verbatim}
+\textbf{Kết quả mong đợi:}
+\begin{Verbatim}
+-rw-------@  1 vinh  staff  9 Jun 26 10:05 bi-mat.txt
+\end{Verbatim}
+Chỉ owner đọc/ghi; group và others \textbf{trống trơn} (\cmd{-{}-{}-{}-{}-{}-}). Đây
+đúng là kiểu quyền dùng cho khóa bí mật. (Dấu \cmd{@} nếu có chỉ là thuộc tính mở
+rộng của macOS, bỏ qua.)
+\end{labbox}
+
+\begin{labbox}[Lab C --- Bước 2: Quan sát \texttt{go-w} có TÁC DỤNG THẬT]
+Để thấy rõ \cmd{go-w} \textit{gỡ} quyền ghi, ta cố tình tạo trạng thái có \cmd{w}
+cho group và others trước:
+\begin{Verbatim}
+chmod 664 bi-mat.txt
+ls -l bi-mat.txt
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} group và others đều có \cmd{w}:
+\begin{Verbatim}
+-rw-rw-r--@  1 vinh  staff  9 Jun 26 10:05 bi-mat.txt
+\end{Verbatim}
+Giờ gỡ \cmd{w} của group + others:
+\begin{Verbatim}
+chmod go-w bi-mat.txt
+ls -l bi-mat.txt
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} \cmd{w} của group biến mất:
+\begin{Verbatim}
+-rw-r--r--@  1 vinh  staff  9 Jun 26 10:05 bi-mat.txt
+\end{Verbatim}
+\textbf{Quan sát:} lần này bạn \textbf{thấy rõ} \cmd{w} bị gỡ (từ \cmd{rw-rw-} về
+\cmd{rw-r-{}-}). Nếu chạy \cmd{go-w} trên một file vốn đã không có \cmd{w} cho
+group/others (vd \cmd{644}), lệnh vẫn chạy đúng nhưng \textbf{không có gì thay đổi
+nhìn thấy được} --- đừng tưởng lệnh hỏng.
+
+Đặt lại \cmd{600} cho an toàn rồi sang bước sau:
+\begin{Verbatim}
+chmod 600 bi-mat.txt
+\end{Verbatim}
+\end{labbox}
+
+\begin{labbox}[Lab C --- Bước 3: So sánh số 644 và 755 trên \texttt{chao.sh}]
+\begin{Verbatim}
+chmod 644 chao.sh
+ls -l chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} mất \cmd{x}, quay về file thường:
+\begin{Verbatim}
+-rw-r--r--@  1 vinh  staff  26 Jun 26 10:00 chao.sh
+\end{Verbatim}
+
+\begin{Verbatim}
+chmod 755 chao.sh
+ls -l chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} ai cũng chạy/đọc được, chỉ chủ sửa được:
+\begin{Verbatim}
+-rwxr-xr-x@  1 vinh  staff  26 Jun 26 10:00 chao.sh
+\end{Verbatim}
+
+\textbf{Quan sát:} cùng một file, \cmd{644} và \cmd{755} chỉ khác nhau ở các chữ
+\cmd{x}. Bạn vừa ``lập trình quyền'' bằng con số. So với \cmd{chmod u+x} ở lab B ---
+hai cách \textbf{cho kết quả tương đương}, chỉ là cách viết khác nhau.
+\end{labbox}
+
+\begin{labbox}[Lab C --- Bước 4: Đối chiếu lại bằng ký hiệu (tùy chọn)]
+\begin{Verbatim}
+chmod go-x chao.sh
+ls -l chao.sh
+\end{Verbatim}
+\textbf{Kết quả mong đợi:} bỏ \cmd{x} của group+others, còn lại owner chạy được:
+\begin{Verbatim}
+-rwxr--r--@  1 vinh  staff  26 Jun 26 10:00 chao.sh
+\end{Verbatim}
+\end{labbox}
+
+\begin{labbox}[Lab C --- Bước 5: DỌN DẸP (quan trọng)]
+\begin{Verbatim}
+cd ~
+rm -r ~/linux-lab/ch5
+\end{Verbatim}
+\begin{itemize}
+\item \cmd{cd \textasciitilde}: về thư mục nhà (\cmd{\textasciitilde} = home của bạn).
+\item \cmd{rm -r}: xóa thư mục cùng mọi thứ bên trong (\cmd{-r} = recursive, đệ quy).
+\end{itemize}
+\textbf{Kết quả mong đợi:} im lặng = đã xóa sạch sân tập ch5. Kiểm chứng:
+\begin{Verbatim}
+ls ~/linux-lab
+\end{Verbatim}
+sẽ không còn thấy \cmd{ch5}.
+\end{labbox}
+
+\begin{warnbox}[Trấn an + cảnh báo]
+\cmd{rm -r} ở đây chỉ xóa đúng thư mục tập của bạn
+(\cmd{\textasciitilde/linux-lab/ch5}), không liên quan gì tới hệ thống --- an toàn.
+NHƯNG hãy ghi nhớ nguyên tắc chung: \textbf{tuyệt đối không} gõ \cmd{rm -r} (nhất là
+kèm \cmd{sudo}) với đường dẫn bắt đầu bằng \cmd{/} hay \cmd{\textasciitilde} trừ khi
+bạn chắc 100\%. Luôn \cmd{ls} đường dẫn để nhìn rõ mình sắp xóa gì \textbf{trước
+khi} xóa.
+\end{warnbox}
+
+\begin{checkbox}[Tự kiểm tra 5.6]
+\begin{enumerate}
+\item Sau \cmd{chmod 600 bi-mat.txt}, group và others thấy được gì?
+\item Khác biệt hiển thị giữa \cmd{644} và \cmd{755} nằm ở ký tự nào?
+\item \cmd{rm -r} khác \cmd{rm} thường ở chỗ nào?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 8. CHOWN / CHGRP =================
+\section{\texttt{chown} / \texttt{chgrp} --- đổi CHỦ và đổi NHÓM (sơ lược)}
+
+Khác với \cmd{chmod} (đổi \textit{quyền}), hai lệnh này đổi \textit{ai sở hữu}:
+
+\begin{itemize}
+\item \textbf{\cmd{chown}} = \textit{change owner} --- đổi chủ sở hữu file. \\
+  Ví dụ: \cmd{chown vinh tepnao.txt} (đổi chủ thành \cmd{vinh}). \\
+  Đổi cả chủ và nhóm: \cmd{chown vinh:staff tepnao.txt}.
+\item \textbf{\cmd{chgrp}} = \textit{change group} --- đổi nhóm của file. \\
+  Ví dụ: \cmd{chgrp staff tepnao.txt}.
+\end{itemize}
+
+\begin{warnbox}[Các lệnh trên chỉ để NHẬN DIỆN --- đừng chạy trong lab]
+Đổi chủ sở hữu file sang \textbf{người dùng khác} \textbf{LUÔN} cần quyền root
+(\cmd{sudo}) trên cả Linux và macOS --- người dùng thường không thể tùy ý ``cho/nhận''
+chủ sở hữu (nếu cho phép thì hết bảo mật). Nếu bạn thử \cmd{chown} sang user khác mà
+không có quyền, bạn sẽ gặp lỗi \cmd{Operation not permitted} --- \textbf{đừng} vì thế
+mà gõ \cmd{sudo}; bạn không cần làm điều này khi mới học.
+
+Riêng \cmd{chgrp}: người dùng thường có thể đổi nhóm file của mình sang một nhóm
+\textbf{mà chính họ là thành viên} mà không cần \cmd{sudo}; đổi sang nhóm khác thì
+cần root.
+\end{warnbox}
+
+\begin{notebox}[Khác biệt trên macOS]
+macOS dùng nhóm \cmd{staff} làm nhóm chính (Linux thường tạo nhóm riêng theo tên
+user). Cú pháp \cmd{chown user:group} thì giống nhau. macOS còn có lớp bảo vệ riêng
+(vd các thư mục hệ thống bị khóa bởi cơ chế bảo vệ toàn vẹn) nên kể cả \cmd{sudo}
+cũng có chỗ không đổi được.
+\end{notebox}
+
+\textbf{Phân biệt cốt lõi --- đừng nhầm:}
+
+\begin{center}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{8cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Lệnh} & \textbf{Đổi cái gì} \\
+\hline
+\cmd{chmod} & \textbf{Quyền} (ai được đọc/ghi/chạy) \\
+\hline
+\cmd{chown} & \textbf{Chủ sở hữu} (file thuộc về ai) \\
+\hline
+\cmd{chgrp} & \textbf{Nhóm} của file \\
+\hline
+\end{tabular}
+\end{center}
+
+% ================= 9. SUDO =================
+\section{\texttt{sudo} --- mượn quyền quản trị trong chốc lát}
+
+\subsection{\texttt{sudo} là gì?}
+
+\textbf{\cmd{sudo}} = \textit{superuser do} = ``làm với tư cách siêu người dùng''. Bạn
+đặt \cmd{sudo} trước một lệnh để \textbf{chạy đúng lệnh đó} với quyền quản trị (quyền
+của root), thường để:
+
+\begin{itemize}
+\item sửa \textbf{file hệ thống} (file của hệ điều hành),
+\item \textbf{cài đặt} phần mềm vào khu vực chung của máy,
+\item khởi động/dừng dịch vụ hệ thống.
+\end{itemize}
+
+Cú pháp:
+\begin{Verbatim}
+sudo <lenh can quyen cao>
+\end{Verbatim}
+Lần đầu trong phiên, \cmd{sudo} sẽ \textbf{hỏi mật khẩu}. Trên \textbf{macOS}, đó
+chính là \textbf{mật khẩu đăng nhập của CHÍNH bạn} (với điều kiện tài khoản của bạn
+thuộc nhóm admin/sudoers). Khi gõ, màn hình \textbf{không hiện ký tự nào} (kể cả dấu
+sao); cứ gõ rồi Enter. Sau khi đúng, macOS thường nhớ trong vài phút để bạn không
+phải gõ lại liên tục.
+
+\begin{warnbox}[CẢNH BÁO bảo mật --- đọc kỹ]
+Chỉ gõ mật khẩu khi \textbf{CHÍNH BẠN} vừa chủ động gõ một lệnh bắt đầu bằng
+\cmd{sudo}. Nếu một script lạ, một hướng dẫn trên mạng, hay bất kỳ thứ gì
+\textbf{tự dưng} hiện ô hỏi mật khẩu \cmd{sudo}, \textbf{ĐỪNG} gõ --- hãy dừng lại và
+kiểm tra xem lệnh đó làm gì. Đây là vector lừa đảo (phishing) phổ biến với người
+mới. (Liên hệ với cảnh báo copy-paste ở mục 9.3.)
+\end{warnbox}
+
+\begin{notebox}[Trên macOS]
+Tài khoản người dùng đầu tiên thường là \textbf{admin} và có quyền dùng \cmd{sudo}.
+Tài khoản ``standard'' (chuẩn) thì không. Bạn \textbf{không cần} thử \cmd{sudo} trong
+chương này.
+\end{notebox}
+
+\subsection{\texttt{sudo} khác \texttt{su} thế nào?}
+
+\begin{itemize}
+\item \textbf{\cmd{su}} (\textit{switch user}) = \textbf{chuyển hẳn} sang một người
+  dùng khác (mặc định là root) và \textbf{ở lại đó} cho tới khi \cmd{exit}. Giống như
+  ``ngồi vào ghế root rồi làm liên tục''.
+\item \textbf{\cmd{sudo}} = chỉ \textbf{mượn quyền cho đúng một lệnh} rồi trả lại
+  ngay. Giống như ``nhờ sếp ký duyệt một giấy tờ'' thay vì ``chiếm ghế sếp''.
+\end{itemize}
+
+\cmd{sudo} an toàn hơn vì \textbf{phạm vi hẹp} (một lệnh) và \textbf{có ghi log} (xem
+mục Senior). Trên macOS, việc \textbf{đăng nhập trực tiếp bằng tài khoản root bị vô
+hiệu hóa mặc định} (root không có mật khẩu để đăng nhập trực tiếp), NHƯNG root vẫn
+tồn tại và \cmd{sudo} vẫn nâng quyền lên root (uid \cmd{0}) để chạy lệnh --- đó chính
+là lý do \cmd{sudo} là con đường chuẩn. Nói cách khác: macOS không cho bạn ``đăng
+nhập làm root'', nhưng \cmd{sudo} vẫn chạy lệnh \textbf{với tư cách root}.
+
+\subsection{``Quyền lớn, trách nhiệm lớn'' --- cảnh báo cho người mới}
+
+\cmd{sudo} bỏ qua mọi rào quyền. Một lệnh xóa nhầm chạy với \cmd{sudo} có thể
+\textbf{phá hệ điều hành}. Nguyên tắc vàng:
+
+\begin{warnbox}[Nguyên tắc vàng khi dùng \texttt{sudo}]
+\begin{itemize}
+\item \textbf{KHÔNG} gõ \cmd{sudo} chỉ vì thấy lệnh báo lỗi quyền --- hãy hiểu
+  \textit{vì sao} nó cần quyền cao trước đã.
+\item \textbf{KHÔNG} copy-paste lệnh \cmd{sudo} lạ từ Internet khi chưa hiểu nó làm
+  gì.
+\item \textbf{Đặc biệt nguy hiểm:} tuyệt đối tránh tổ hợp \cmd{sudo rm -r} với đường
+  dẫn bắt đầu bằng \cmd{/} hoặc \cmd{\textasciitilde} (vd \cmd{rm -rf /} có thể xóa
+  sạch máy). Luôn \cmd{ls} đường dẫn trước khi xóa.
+\item Khi học, gần như \textbf{mọi việc luyện tập đều KHÔNG cần \cmd{sudo}} (như cả
+  chương này).
+\end{itemize}
+\end{warnbox}
+
+\begin{checkbox}[Tự kiểm tra 5.7]
+\begin{enumerate}
+\item \cmd{sudo} viết tắt của gì? Dùng để làm gì?
+\item Trên macOS, \cmd{sudo} hỏi mật khẩu nào? Vì sao gõ không thấy ký tự?
+\item \cmd{sudo} khác \cmd{su} ở điểm cốt lõi nào?
+\end{enumerate}
+\end{checkbox}
+
+% ================= 10. GOC SENIOR =================
+\section{Góc Senior (vì sao, production, cạm bẫy)}
+
+\begin{seniorbox}[1. Phân quyền là XƯƠNG SỐNG của bảo mật]
+Cả ngành DevOps/Security xoay quanh một câu hỏi: \textit{``Thực thể này có thực sự
+cần quyền đó không?''} Nguyên tắc nền là \textbf{least privilege (đặc quyền tối
+thiểu)}: cấp \textbf{đúng mức tối thiểu} đủ để làm việc, không hơn. Một tài
+khoản/tiến trình bị chiếm cũng chỉ gây hại trong phạm vi quyền nó có.
+\end{seniorbox}
+
+\begin{seniorbox}[2. Vì sao \texttt{chmod 777} là NGUY HIỂM]
+\cmd{777} = \cmd{rwxrwxrwx} = \textbf{ai cũng đọc/ghi/chạy được}. Nghĩa là bất kỳ
+người dùng hay tiến trình nào trên máy đều có thể \textbf{sửa hoặc thay thế} file đó
+--- kẻ tấn công có thể thay script của bạn bằng mã độc. Câu ``cứ 777 cho chắc, đỡ lỗi
+quyền'' là \textbf{sai lầm kinh điển} che giấu lỗ hổng thật. Cực kỳ tránh
+\textbf{\cmd{chmod -R 777}} (đệ quy cả cây thư mục) --- đây là một trong những thói
+quen tệ nhất, mở toang toàn bộ dự án.
+\end{seniorbox}
+
+\begin{seniorbox}[3. Ví dụ thật: khóa SSH bắt buộc \texttt{600}]
+Khóa riêng SSH (private key, dùng để đăng nhập server từ xa) \textbf{buộc} phải có
+quyền \cmd{600} (chỉ chủ đọc/ghi). Nếu lỏng hơn (vd group/others đọc được), chương
+trình \cmd{ssh} sẽ \textbf{từ chối dùng khóa} và báo lỗi đại loại \textit{``permissions
+are too open''}. Đây là ví dụ sống động: phần mềm chủ động \textbf{ép} bạn theo least
+privilege.
+\end{seniorbox}
+
+\begin{seniorbox}[4. Bộ ba nâng cao (biết tên để sau này tra cứu)]
+\begin{itemize}
+\item \textbf{setuid / setgid}: cho phép một chương trình chạy với quyền của
+  \textit{chủ file} thay vì người gọi (mạnh nhưng nhạy cảm về bảo mật).
+\item \textbf{sticky bit}: thường đặt trên thư mục dùng chung (như \cmd{/tmp}) để
+  \textbf{chỉ chủ file mới xóa được file của mình}, dù thư mục mở cho nhiều người
+  ghi.
+\end{itemize}
+(Chương này chỉ giới thiệu tên; bạn sẽ học sâu ở chương nâng cao.)
+\end{seniorbox}
+
+\begin{seniorbox}[5. \texttt{sudo} có AUDIT (ghi log)]
+Mỗi lần \cmd{sudo}, hệ thống ghi lại \textit{ai, lúc nào, chạy lệnh gì}. Trong
+production, đây là cơ sở để \textbf{truy vết} khi có sự cố --- và là lý do \cmd{sudo}
+được ưa hơn việc ``thành root rồi làm gì cũng được mà không dấu vết''.
+\end{seniorbox}
+
+\begin{seniorbox}[6. Liên hệ tương lai (cloud/IAM)]
+Mô hình owner/group/others + least privilege chính là \textbf{phiên bản sơ khai} của
+\textbf{IAM} (Identity and Access Management) trên cloud (AWS/GCP/Azure): ở đó bạn sẽ
+gán ``policy'' cho ``user/role'' theo đúng tư duy \textit{ai được làm gì với tài
+nguyên nào}. Học chắc \cmd{chmod}/\cmd{sudo} hôm nay là đặt nền cho IAM ngày mai.
+\end{seniorbox}
+
+% ================= 11. HIEU LAM =================
+\section{Hiểu lầm thường gặp (đọc kỹ để khỏi sai cả đời)}
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{5.5cm}|>{\raggedright\arraybackslash}p{8cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hiểu lầm} & \textbf{Sự thật} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tablehead}\textbf{Hiểu lầm} & \textbf{Sự thật} \\
+\hline
+\endhead
+``Cứ \cmd{chmod 777} cho chắc, đỡ lỗi quyền.'' & \textbf{SAI.} \cmd{777} mở toang
+cho mọi người ghi $\rightarrow$ lỗ hổng bảo mật. Đặt \textbf{đúng} quyền tối thiểu cần dùng (vd
+\cmd{644}, \cmd{755}, \cmd{600}). \\
+\hline
+``root và sudo là một.'' & \textbf{Không.} \cmd{root} là \textbf{tài khoản} quyền
+tối cao. \cmd{sudo} là \textbf{công cụ} để mượn quyền root cho \textbf{một lệnh} rồi
+trả lại. Bạn không ``là'' root khi dùng \cmd{sudo}. \\
+\hline
+``Đổi quyền = đổi chủ sở hữu.'' & \textbf{Khác nhau.} \cmd{chmod} đổi
+\textbf{quyền} (đọc/ghi/chạy). \cmd{chown} đổi \textbf{chủ}. Hai việc hoàn toàn
+riêng. \\
+\hline
+``Thiếu \cmd{x} thì cứ sửa nội dung file là chạy được.'' & \textbf{Không.} Nội dung
+đúng nhưng thiếu bit \cmd{x} thì hệ thống \textbf{vẫn từ chối chạy} (đã thấy ở lab
+B). \\
+\hline
+``Thư mục có \cmd{r} là vào được rồi.'' & \textbf{Không.} Vào (cd) cần \cmd{x}.
+\cmd{r} chỉ cho \textbf{liệt kê tên}. \\
+\hline
+``\cmd{+x} cũng khóa được quyền ghi của người khác.'' & \textbf{Không.} \cmd{+x} chỉ
+\textbf{thêm} \cmd{x}, không đụng \cmd{w}. Muốn khóa quyền ghi của group/others phải
+dùng \cmd{=} (đặt tuyệt đối) hoặc cách số. \\
+\hline
+``macOS không có root.'' & \textbf{Không.} root vẫn tồn tại; chỉ là \textbf{đăng
+nhập trực tiếp} bằng root bị tắt mặc định. \cmd{sudo} vẫn chạy lệnh với tư cách
+root. \\
+\hline
+\end{longtable}
+
+% ================= 12. FLASHCARDS =================
+\section{Thẻ ghi nhớ (flashcards)}
+
+\begin{notebox}[Cách dùng]
+Che cột phải, tự trả lời, rồi mở ra kiểm tra.
+\end{notebox}
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{6cm}|>{\raggedright\arraybackslash}p{7.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hỏi} & \textbf{Đáp} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tablehead}\textbf{Hỏi} & \textbf{Đáp} \\
+\hline
+\endhead
+\cmd{whoami} làm gì? & In tên đăng nhập của tôi \\
+\hline
+\cmd{id} cho biết gì? & uid, gid (nhóm chính của phiên), các nhóm \\
+\hline
+Ký tự đầu \cmd{d} trong \cmd{ls -l} nghĩa là? & Thư mục (directory) \\
+\hline
+Dấu \cmd{@} sau cụm quyền trên macOS? & File có thuộc tính mở rộng (extended
+attributes), không phải quyền \\
+\hline
+\cmd{r}, \cmd{w}, \cmd{x} giá trị số? & 4, 2, 1 \\
+\hline
+\cmd{7} = quyền gì? & \cmd{rwx} (đọc+ghi+chạy) \\
+\hline
+\cmd{5} = quyền gì? & \cmd{r-x} (đọc+chạy) \\
+\hline
+\cmd{chmod 644} $\rightarrow$ chuỗi? & \cmd{rw-r-{}-r-{}-} (file thường) \\
+\hline
+\cmd{chmod 755} $\rightarrow$ chuỗi? & \cmd{rwxr-xr-x} (script \& thư mục cần cho người khác truy
+cập; thư mục riêng tư nên xét 700/750) \\
+\hline
+\cmd{chmod 600} $\rightarrow$ chuỗi? & \cmd{rw-{}-{}-{}-{}-{}-} (file riêng tư/khóa) \\
+\hline
+\cmd{chmod u+x file} & Thêm quyền chạy cho chủ (không đụng quyền khác) \\
+\hline
+\cmd{chmod go-w file} & Bỏ quyền ghi của group+others \\
+\hline
+\cmd{+x} vs \cmd{=}? & \cmd{+x} thêm x (cộng dồn); \cmd{=} đặt tuyệt đối, xóa quyền
+không liệt kê \\
+\hline
+\cmd{x} trên thư mục nghĩa là? & Được \cmd{cd} vào (bước qua cửa) \\
+\hline
+\cmd{chmod} vs \cmd{chown}? & Đổi quyền vs đổi chủ sở hữu \\
+\hline
+\cmd{sudo} là gì? & Chạy 1 lệnh với quyền quản trị (superuser do) \\
+\hline
+\cmd{sudo} vs \cmd{su}? & Mượn quyền 1 lệnh vs chuyển hẳn sang user khác \\
+\hline
+macOS có root không? & Có; chỉ tắt đăng nhập trực tiếp, sudo vẫn chạy lệnh với tư
+cách root \\
+\hline
+Vì sao khóa SSH cần \cmd{600}? & Lỏng hơn thì \cmd{ssh} từ chối dùng \\
+\hline
+Vì sao \cmd{777} nguy hiểm? & Ai cũng ghi được $\rightarrow$ lỗ hổng bảo mật \\
+\hline
+Least privilege nghĩa là? & Cấp đúng quyền tối thiểu đủ dùng \\
+\hline
+\end{longtable}
+
+% ================= 13. ON NGAT QUANG =================
+\section{Kế hoạch ôn ngắt quãng}
+
+\begin{itemize}
+\item \textbf{Sau 1 ngày:} Mở Terminal, gõ lại \cmd{whoami}, \cmd{id}, \cmd{groups}.
+  Tạo nhanh 1 file rồi \cmd{chmod 600} và \cmd{chmod 644}, đọc lại \cmd{ls -l} đến
+  khi giải mã được không cần nhìn bảng (nhớ: dấu \cmd{@} trên macOS chỉ là thuộc tính
+  mở rộng, bỏ qua). Đọc lại ``Thẻ ghi nhớ'' một lượt.
+\item \textbf{Sau 3 ngày:} Không nhìn sách, tự làm lại \textbf{toàn bộ lab B} (script
+  \cmd{chao.sh}: tạo $\rightarrow$ chạy thất bại $\rightarrow$ \cmd{chmod u+x} $\rightarrow$ chạy được). Nhẩm 755/644/600
+  từ trí nhớ.
+\item \textbf{Sau 1 tuần:} Giải lại tất cả ``Tự kiểm tra'' + ``Bài tập mở rộng''
+  không xem đáp án. Tự giải thích thành lời cho người khác (hoặc cho chính mình):
+  \textit{``Vì sao chmod 777 nguy hiểm?''} và \textit{``sudo khác su ở đâu?''}. Nếu
+  giải thích trôi chảy = đã thuộc.
+\end{itemize}
+
+% ================= 14. TOM TAT =================
+\section{Tóm tắt 1 trang}
+
+\begin{itemize}
+\item \textbf{Đa người dùng $\rightarrow$ cần phân quyền.} Mỗi file có \textbf{owner / group /
+  others} + tài khoản tối cao \textbf{root}.
+\item \textbf{Tôi là ai:} \cmd{whoami} (tên), \cmd{id} (uid/gid/nhóm), \cmd{groups}.
+  macOS: nhóm chính của phiên thường là \cmd{staff}, uid bắt đầu \textasciitilde 501.
+\item \textbf{Đọc \cmd{ls -l}} chuỗi 10 ký tự: \cmd{[loại][owner rwx][group
+  rwx][others rwx]}. \cmd{-}=file, \cmd{d}=thư mục, \cmd{l}=link (còn \cmd{c/b/p/s}
+  ít gặp). Trên macOS có thể thấy thêm \cmd{@} (extended attributes) hoặc \cmd{+}
+  (ACL) sau 10 ký tự --- không phải quyền.
+\item \textbf{Quyền:} \cmd{r}=4 (đọc), \cmd{w}=2 (ghi), \cmd{x}=1 (chạy file / vào
+  thư mục).
+\item \textbf{\cmd{chmod} ký hiệu:} \cmd{u/g/o/a} + \cmd{+/-/=} + \cmd{r/w/x}. VD
+  \cmd{chmod u+x}, \cmd{chmod go-w}. Nhớ: \cmd{+} cộng dồn, \cmd{=} đặt tuyệt đối
+  (xóa quyền không liệt kê).
+\item \textbf{\cmd{chmod} số (octal, mỗi vai 0-7):} 3 chữ số = owner/group/others,
+  mỗi số là tổng 4+2+1.
+  \begin{itemize}
+  \item \cmd{755} = \cmd{rwxr-xr-x} (script/thư mục cần truy cập) $\cdot$
+    \cmd{644} = \cmd{rw-r-{}-r-{}-} (file thường) $\cdot$
+    \cmd{600} = \cmd{rw-{}-{}-{}-{}-{}-} (riêng tư/khóa). Thư mục/file riêng tư cân
+    nhắc \cmd{700/750}.
+  \end{itemize}
+\item \textbf{\cmd{chown}/\cmd{chgrp}} đổi chủ/nhóm --- \textbf{khác} \cmd{chmod} (đổi
+  quyền). Đổi chủ sang user khác \textbf{luôn} cần \cmd{sudo}; chỉ để nhận diện,
+  không chạy trong lab.
+\item \textbf{\cmd{sudo}} = mượn quyền quản trị cho \textbf{một lệnh}; macOS hỏi mật
+  khẩu đăng nhập của \textbf{chính bạn} (gõ không hiện ký tự); chỉ gõ khi \textbf{chính
+  bạn} chủ động gõ \cmd{sudo}. Khác \cmd{su} (chuyển hẳn user). macOS tắt đăng nhập
+  trực tiếp bằng root nhưng \cmd{sudo} vẫn chạy với tư cách root. Dùng dè dặt; tránh
+  \cmd{sudo rm -r} với \cmd{/} hoặc \cmd{\textasciitilde}.
+\item \textbf{Senior:} least privilege là gốc; \cmd{chmod 777} (nhất là \cmd{-R 777})
+  nguy hiểm; khóa SSH bắt buộc \cmd{600}; \cmd{sudo} có log để audit; đây là nền của
+  IAM cloud sau này.
+\end{itemize}
+
+% ================= 15. BAI TAP =================
+\section{Bài tập mở rộng (có đáp án)}
+
+\begin{labbox}[Chuẩn bị sân tập]
+Làm trong sân tập an toàn. Trước khi bắt đầu:
+\cmd{mkdir -p \textasciitilde/linux-lab/ch5-bt \&\& cd \textasciitilde/linux-lab/ch5-bt}.
+Xong nhớ dọn:
+\cmd{cd \textasciitilde \&\& rm -r \textasciitilde/linux-lab/ch5-bt}.
+\end{labbox}
+
+\textbf{BT1.} Tạo file \cmd{note.txt} rồi đặt quyền sao cho \textbf{chủ đọc+ghi,
+group chỉ đọc, others không có gì}. Viết lệnh (cả 2 cách: số và ký hiệu) và cho biết
+chuỗi \cmd{ls -l} mong đợi.
+
+\textbf{BT2.} Có file \cmd{run.sh} đang là \cmd{-rw-r-{}-r-{}-}. Hãy làm cho
+\textbf{mọi người đều chạy được} nhưng \textbf{chỉ chủ sửa được}. Viết lệnh số, và
+lệnh ký hiệu tương đương.
+
+\textbf{BT3.} Giải mã bằng lời: \cmd{drwxr-x-{}-{}-}. Đây là gì, ai làm được gì?
+
+\textbf{BT4.} Vì sao đặt \cmd{chmod 777 \textasciitilde} (cả thư mục nhà) là ý tưởng
+tệ? Nêu 2 lý do.
+
+\textbf{BT5.} Bạn gặp lỗi \cmd{ssh} từ chối khóa riêng và than phiền ``permissions too
+open''. Lệnh nào sửa, và vì sao?
+
+\subsection*{Đáp án Bài tập mở rộng}
+
+\textbf{BT1.}
+\begin{Verbatim}
+echo "ghi chu" > note.txt
+chmod 640 note.txt          # cach so
+# hoac cach ky hieu tuong duong:
+chmod u=rw,g=r,o= note.txt
+ls -l note.txt
+\end{Verbatim}
+Chuỗi mong đợi: \cmd{-rw-r-{}-{}-{}-{}-} (owner \cmd{rw-}, group \cmd{r-{}-}, others
+\cmd{-{}-{}-} = số \cmd{640}). (Trên macOS có thể có thêm dấu \cmd{@}:
+\cmd{-rw-r-{}-{}-{}-{}-@} --- bình thường.)
+
+\textbf{BT2.}
+\begin{Verbatim}
+chmod 755 run.sh            # cach so -> rwxr-xr-x
+# hoac ky hieu, DAT TUYET DOI cho chac chan:
+chmod u=rwx,go=rx run.sh
+ls -l run.sh
+\end{Verbatim}
+Kết quả: \cmd{-rwxr-xr-x}. Mọi người chạy/đọc được, chỉ owner có \cmd{w} (sửa).
+
+\begin{notebox}[Lưu ý sư phạm quan trọng]
+Đề bài cho file đang là \cmd{-rw-r-{}-r-{}-}. Trong trường hợp đó, \cmd{chmod a+x
+run.sh} cũng \textit{ra đúng} \cmd{-rwxr-xr-x} --- nhưng đó chỉ là \textbf{may mắn nhờ
+trạng thái ban đầu}. \cmd{+x} chỉ \textbf{thêm} \cmd{x}, KHÔNG đụng tới \cmd{w}; nếu
+file ban đầu lỡ có \cmd{w} cho group/others (vd vừa bị \cmd{chmod 666}), thì \cmd{a+x}
+sẽ KHÔNG khóa được quyền sửa của người khác $\rightarrow$ vi phạm yêu cầu ``chỉ chủ sửa được''.
+Vì vậy, khi cần \textbf{đảm bảo} kết quả, hãy dùng cách số (\cmd{755}) hoặc ký hiệu
+\textbf{đặt tuyệt đối} (\cmd{u=rwx,go=rx}), đừng dựa vào \cmd{+x}.
+\end{notebox}
+
+\textbf{BT3.} \cmd{drwxr-x-{}-{}-}:
+\begin{itemize}
+\item Ký tự đầu \cmd{d} $\rightarrow$ \textbf{thư mục}.
+\item \cmd{rwx} (owner): chủ đọc nội dung, ghi/tạo/xóa file bên trong, và \cmd{cd}
+  vào được.
+\item \cmd{r-x} (group): thành viên nhóm đọc danh sách và \cmd{cd} vào được,
+  \textbf{không} tạo/xóa file.
+\item \cmd{-{}-{}-} (others): người ngoài \textbf{không thấy, không vào} được gì.
+\end{itemize}
+
+\textbf{BT4.} \cmd{chmod 777 \textasciitilde} tệ vì:
+\begin{enumerate}
+\item \textbf{Bảo mật:} mọi người dùng/tiến trình khác đều \textbf{ghi} được vào thư
+  mục nhà của bạn $\rightarrow$ có thể thay/cắm file độc, xóa dữ liệu.
+\item \textbf{Phá công cụ dựa trên quyền:} nhiều chương trình (vd \cmd{ssh})
+  \textbf{từ chối hoạt động} khi thấy thư mục/khóa quyền quá mở, nên thay vì ``đỡ
+  lỗi'' bạn lại \textbf{gây thêm lỗi}; đồng thời vi phạm least privilege.
+\end{enumerate}
+
+\textbf{BT5.}
+\begin{Verbatim}
+chmod 600 ~/.ssh/id_ed25519     # (ten khoa co the khac, vd id_rsa)
+\end{Verbatim}
+Vì khóa riêng SSH \textbf{bắt buộc} chỉ owner đọc/ghi (\cmd{rw-{}-{}-{}-{}-{}-} =
+\cmd{600}). Nếu group/others đọc được, \cmd{ssh} coi là không an toàn (người khác có
+thể trộm khóa) nên \textbf{từ chối dùng}. Đặt \cmd{600} khôi phục đúng quyền tối
+thiểu, \cmd{ssh} chấp nhận lại.
+
+% ================= DAP AN TU KIEM TRA =================
+\section*{Đáp án các mục ``Tự kiểm tra''}
+\addcontentsline{toc}{section}{Đáp án các mục ``Tự kiểm tra''}
+
+\begin{checkbox}[Đáp án 5.1]
+\begin{enumerate}
+\item Owner (chủ), group (nhóm), others (người khác).
+\item root là superuser --- quyền tối cao, bỏ qua mọi rào quyền, làm được mọi thứ.
+\item Vì hệ điều hành vẫn chạy nhiều tài khoản/tiến trình hệ thống cùng lúc; phân
+  quyền cô lập chúng để bảo mật và tránh phá nhau.
+\end{enumerate}
+\end{checkbox}
+
+\begin{checkbox}[Đáp án 5.2]
+\begin{enumerate}
+\item \cmd{whoami}.
+\item \cmd{uid} định danh \textbf{người dùng}; \cmd{gid} định danh \textbf{nhóm
+  chính} (primary group) của phiên làm việc.
+\item \cmd{staff}.
+\end{enumerate}
+\end{checkbox}
+
+\begin{checkbox}[Đáp án 5.3]
+\begin{enumerate}
+\item owner: đọc + ghi (\cmd{rw-}); others: chỉ đọc (\cmd{r-{}-}).
+\item \cmd{r=4}, \cmd{w=2}, \cmd{x=1}.
+\item Liệt kê được tên file bên trong (nhờ \cmd{r}), nhưng \textbf{không \cmd{cd}
+  vào được} và không truy cập nội dung (thiếu \cmd{x}).
+\end{enumerate}
+\end{checkbox}
+
+\begin{checkbox}[Đáp án 5.4]
+\begin{enumerate}
+\item Vì file \cmd{chao.sh} chưa có quyền \cmd{x} (đang \cmd{-rw-r-{}-r-{}-}), hệ
+  thống không cho chạy.
+\item Thêm quyền thực thi (\cmd{x}) cho owner $\rightarrow$ thành \cmd{-rwxr-{}-r-{}-}.
+\item \cmd{./} = ``file nằm ngay trong thư mục hiện tại'' (chỉ rõ vị trí để shell
+  tìm và chạy).
+\end{enumerate}
+\end{checkbox}
+
+\begin{checkbox}[Đáp án 5.5]
+\begin{enumerate}
+\item Bỏ quyền \textbf{ghi (\cmd{w})} của \textbf{group và others} trên file
+  \cmd{abc}.
+\item \cmd{5}=\cmd{r-x} (đọc+chạy); \cmd{6}=\cmd{rw-} (đọc+ghi); \cmd{7}=\cmd{rwx}
+  (đọc+ghi+chạy).
+\item \cmd{chmod 600} $\rightarrow$ \cmd{rw-{}-{}-{}-{}-{}-}; phù hợp \textbf{file riêng tư} như
+  khóa SSH (chỉ chủ đọc/ghi).
+\end{enumerate}
+\end{checkbox}
+
+\begin{checkbox}[Đáp án 5.6]
+\begin{enumerate}
+\item Không thấy gì (group và others là \cmd{-{}-{}-}); chỉ owner đọc/ghi được.
+\item Ở các chữ \cmd{x}: \cmd{755} có \cmd{x} cho cả ba vai (\cmd{rwxr-xr-x}),
+  \cmd{644} không có \cmd{x} nào (\cmd{rw-r-{}-r-{}-}).
+\item \cmd{rm -r} xóa \textbf{đệ quy} cả thư mục và mọi thứ bên trong; \cmd{rm}
+  thường chỉ xóa \textbf{một file} (không xóa được thư mục có nội dung).
+\end{enumerate}
+\end{checkbox}
+
+\begin{checkbox}[Đáp án 5.7]
+\begin{enumerate}
+\item \textit{superuser do}; dùng để chạy \textbf{một lệnh} với quyền quản trị
+  (root), vd sửa file hệ thống/cài đặt.
+\item Mật khẩu \textbf{đăng nhập của chính bạn} (với điều kiện tài khoản của bạn
+  thuộc nhóm admin) trên macOS; màn hình ẩn hoàn toàn ký tự là \textbf{cố ý} --- để
+  người nhìn qua vai (shoulder surfing) không đọc/đoán được mật khẩu; cứ gõ và Enter.
+\item \cmd{sudo} mượn quyền cho \textbf{đúng một lệnh} rồi trả lại (hẹp, có log);
+  \cmd{su} \textbf{chuyển hẳn} sang user khác và ở lại cho tới khi \cmd{exit}.
+\end{enumerate}
+\end{checkbox}
+
+\vspace{1cm}
+\begin{notebox}[Chuẩn bị cho Chương 6]
+Bạn đã kiểm soát được ``ai làm gì'' với file. Chương sau ta sẽ bước vào \textbf{tiến
+trình \& quản lý chương trình đang chạy} (xem, tìm, dừng tiến trình) --- nơi khái
+niệm ``chủ sở hữu'' và quyền lại tiếp tục phát huy. Hẹn gặp lại!
+\end{notebox}
+
+\end{document}
